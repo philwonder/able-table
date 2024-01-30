@@ -1,0 +1,25 @@
+{
+  "name": "able-table",
+  "version": "1.0.0",
+  "description": "A fast, flexible, type-safe react table",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philwonder/able-table.git"
+  },
+  "author": "Philip Wonder",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/philwonder/able-table/issues"
+  },
+  "homepage": "https://github.com/philwonder/able-table#readme",
+  "devDependencies": {
+    "@types/react": "^18.2.48",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.3.3"
+  }
+}
