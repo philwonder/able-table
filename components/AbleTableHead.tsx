@@ -1,22 +1,22 @@
-import { AbleTableColumn, AbleTableColumnGroup, AbleTableOptions } from "../types";
+import { AbleColumn, AbleColumnGroup, AbleOptions } from "../types";
 import React from "react";
 
-type AbletheadProps<T extends object> = {
-  columns: (AbleTableColumn<T> | AbleTableColumnGroup<T>)[];
-  sortBy: AbleTableColumn<T> | undefined;
+type AbleTableHeadProps<T extends object> = {
+  columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
+  sortBy: AbleColumn<T> | undefined;
   order: "asc" | "desc";
-  onUpdateSort: (sortBy: AbleTableColumn<T> | undefined) => void;
-  options: AbleTableOptions<T> | undefined;
+  onUpdateSort: (sortBy: AbleColumn<T> | undefined) => void;
+  options: AbleOptions<T> | undefined;
 };
 
-export function Ablethead<T extends object>({
+export function AbleTableHead<T extends object>({
   columns,
   sortBy,
   order,
   onUpdateSort,
   options,
-}: AbletheadProps<T>) {
-  const renderHeaderCell = (c: AbleTableColumn<T>, i: number) => (
+}: AbleTableHeadProps<T>) {
+  const renderHeaderCell = (c: AbleColumn<T>, i: number) => (
     <td
       style={{
         zIndex: 11,
@@ -31,7 +31,15 @@ export function Ablethead<T extends object>({
         c.title
       ) : (
         <div
-          className=" inline-flex flex-col w-fit max-w-fit items-center cursor-pointer my-1.5"
+          style={{
+            display: "inline-flex",
+            flexDirection: "column",
+            width: "fit-content",
+            maxWidth: "fit-content",
+            alignItems: "center",
+            cursor: "pointer",
+            margin: "6 0 6 0",
+          }}
           onClick={() => onUpdateSort(c)}
         >
           <svg

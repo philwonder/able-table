@@ -1,12 +1,12 @@
-import { AbleTableColumn, AbleTableOptions } from "../types";
+import { AbleColumn, AbleOptions } from "../types";
 import { AbleTableCell } from "./AbleTableCell";
 import React from "react";
 
 type AbleTableBodyProps<T extends object & { key: string }> = {
   data: T[];
-  columns: AbleTableColumn<T>[];
+  columns: AbleColumn<T>[];
   onRowClick: ((d: T) => void) | undefined;
-  options: AbleTableOptions<T> | undefined;
+  options: AbleOptions<T> | undefined;
 };
 
 export function AbleTableBody<T extends object & { key: string }>({

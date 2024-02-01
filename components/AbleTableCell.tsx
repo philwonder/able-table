@@ -1,13 +1,13 @@
 import { memo } from "react";
-import { AbleTableColumn, AbleTableOptions } from "../types";
+import { AbleColumn, AbleOptions } from "../types";
 import { getField } from "../utilities";
 import React from "react";
 
 type AbleTableCellProps<T extends object & { key: string }> = {
   data: T;
-  column: AbleTableColumn<T>;
+  column: AbleColumn<T>;
   index: number;
-  options?: AbleTableOptions<T> | undefined;
+  options?: AbleOptions<T> | undefined;
 };
 
 export function AbleTableCellComponent<T extends object & { key: string }>({
