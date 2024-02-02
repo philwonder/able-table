@@ -1,10 +1,10 @@
 import React, { ReactNode, useEffect, useState } from "react";
-import { AbleAction, AbleColumn, AbleColumnGroup, AbleOptions } from "./types";
-import { AbleTableBody } from "./components/AbleTableBody";
-import { AbleTableHead } from "./components/AbleTableHead";
-import { getField } from "./utilities";
-import { SearchBox } from "./components/SearchBox";
-import { AbleTablePagination } from "./components/AbleTablePagination";
+import { AbleAction, AbleColumn, AbleColumnGroup, AbleOptions } from "../types";
+import { AbleTableBody } from "./AbleTableBody";
+import { AbleTableHead } from "./AbleTableHead";
+import { getField } from "../utilities";
+import { SearchBox } from "./SearchBox";
+import { AbleTablePagination } from "./AbleTablePagination";
 
 const filterData = <T extends object>(data: T[], columns: AbleColumn<T>[], filter: string) =>
   data.filter((d) =>
