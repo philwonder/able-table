@@ -1,3 +1,2 @@
-const AbleTable = require("./components/AbleTable.tsx");
-
-module.exports = AbleTable;
+import { AbleTable } from "./components/AbleTable";
+export default AbleTable;

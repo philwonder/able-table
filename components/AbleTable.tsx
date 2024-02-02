@@ -118,9 +118,9 @@ export function AbleTable<T extends object & { key: string }>({
         <div style={{ justifyContent: "space-between" }}>
           <h6>{title}</h6>
           <div style={{ display: "flex" }}>
-            {options?.searchable != false && (
+            {/* {options?.searchable != false && (
               <SearchBox value={filter} updateValue={setFilter} />
-            )}
+            )} */}
             {tableActions?.map((a, i) => (
               <button onClick={a.onClick} disabled={a.disabled}>
                 {a.render}
@@ -146,7 +146,7 @@ export function AbleTable<T extends object & { key: string }>({
       </table>
       <AbleTablePagination
         rowsPerPage={rowsPerPage}
-        pageSizeOptions={options.pageSizeOptions ?? defaultPageSizeOptions}
+        pageSizeOptions={options?.pageSizeOptions ?? defaultPageSizeOptions}
         currentPage={currentPage}
         isLastPage={sortedData.length < rowsPerPage}
         updateCurrentPage={setCurrentPage}
