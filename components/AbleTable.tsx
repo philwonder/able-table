@@ -1,12 +1,16 @@
 import React, { ReactNode, useEffect, useState } from "react";
-import { AbleAction, AbleColumn, AbleColumnGroup, AbleOptions } from "../types";
+import { AbleAction, AbleColumn, AbleColumnGroup, AbleOptions, NestedKeyOf } from "../types";
 import { AbleTableBody } from "./AbleTableBody";
 import { AbleTableHead } from "./AbleTableHead";
-import { getField } from "../utilities";
+import { getField, hasKey } from "../utilities";
 import { SearchBox } from "./SearchBox";
 import { AbleTablePagination } from "./AbleTablePagination";
 
-const filterData = <T extends object>(data: T[], columns: AbleColumn<T>[], filter: string) =>
+const filterData = <T extends object>(
+  data: (T & { key: string | number })[],
+  columns: AbleColumn<T>[],
+  filter: string
+) =>
   data.filter((d) =>
     columns.some(
       (c) => c.searchable != false && (c.search?.(d, filter) || standardSearch(d, c, filter))
@@ -23,7 +27,11 @@ const standardSearch = <T extends object>(datum: T, column: AbleColumn<T>, filte
   return cellData?.toString().toLowerCase().includes(filter.toLowerCase());
 };
 
-const sortData = <T extends object>(data: T[], order: "asc" | "desc", sortBy: AbleColumn<T>) =>
+const sortData = <T extends object>(
+  data: (T & { key: string | number })[],
+  order: "asc" | "desc",
+  sortBy: AbleColumn<T>
+) =>
   order == "desc"
     ? data.sort((a, b) => sortBy.sort?.(a, b) ?? standardSort(sortBy)(a, b))
     : data.sort((a, b) => sortBy.sort?.(b, a) ?? standardSort(sortBy)(b, a));
@@ -57,27 +65,29 @@ const flattenColumns = <T extends object>(columns: (AbleColumn<T> | AbleColumnGr
     .map((c) => ("groupTitle" in c ? c.columns.filter((c) => !c.hidden) : c)) //filter out hidden columns within visible groups
     .flat();
 
-type AbleTableProps<T extends object & { key: string }> = {
+type AbleTableProps<T extends object> = {
   data: T[];
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
   title?: ReactNode;
   onRowClick?: (d: T) => void;
   tableActions?: AbleAction[];
   options?: AbleOptions<T>;
-};
+} & (T extends { key: string | number } ? {} : { rowKey: NestedKeyOf<T> });
 
-export function AbleTable<T extends object & { key: string }>({
+export function AbleTable<T extends object>({
   data,
   columns,
+  rowKey,
   title,
   onRowClick,
   tableActions,
   options,
 }: AbleTableProps<T>) {
+  const [keyedData, setKeyedData] = useState<(T & { key: string | number })[]>([]);
   const [filter, setFilter] = useState("");
   const [sortBy, setSortBy] = useState<AbleColumn<T>>();
   const [order, setOrder] = useState<"asc" | "desc">("asc");
-  const [sortedData, setSortedData] = useState<T[]>([]);
+  const [sortedData, setSortedData] = useState<(T & { key: string | number })[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(
     options?.pageSize || options?.pageSizeOptions?.[0] || 10
@@ -93,15 +103,21 @@ export function AbleTable<T extends object & { key: string }>({
   const flatColumns = flattenColumns(columns);
 
   useEffect(() => {
-    const filtered = filterData(data, flatColumns, filter);
+    setKeyedData(
+      data.map((d) => ({ ...d, key: hasKey(d) ? d.key : `${getField(d, rowKey)}` }))
+    );
+  }, [data]);
+
+  useEffect(() => {
+    const filtered = filterData(keyedData, flatColumns, filter);
     const sorted = sortBy ? sortData(filtered, order, sortBy) : filtered;
     setSortedData(sorted);
-  }, [filter, data, columns]);
+  }, [filter, keyedData, columns]);
 
   useEffect(() => {
     sortBy
       ? setSortedData([...sortData(sortedData, order, sortBy)])
-      : setSortedData(filterData(data, flatColumns, filter));
+      : setSortedData(filterData(keyedData, flatColumns, filter));
   }, [sortBy, order]);
 
   const handleSort = (c?: AbleColumn<T>) => {

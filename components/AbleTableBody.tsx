@@ -2,14 +2,14 @@ import { AbleColumn, AbleOptions } from "../types";
 import { AbleTableCell } from "./AbleTableCell";
 import React from "react";
 
-type AbleTableBodyProps<T extends object & { key: string }> = {
-  data: T[];
+type AbleTableBodyProps<T extends object> = {
+  data: (T & { key: string | number })[];
   columns: AbleColumn<T>[];
   onRowClick: ((d: T) => void) | undefined;
   options: AbleOptions<T> | undefined;
 };
 
-export function AbleTableBody<T extends object & { key: string }>({
+export function AbleTableBody<T extends object>({
   data,
   columns,
   onRowClick,
