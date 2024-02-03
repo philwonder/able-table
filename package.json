@@ -2,7 +2,7 @@
   "name": "able-table",
   "version": "1.0.0",
   "description": "A fast, flexible, type-safe react table",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/philwonder/able-table#readme",
   "devDependencies": {
+    "@types/node": "^20.11.15",
     "@types/react": "^18.2.48",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

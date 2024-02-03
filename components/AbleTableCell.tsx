@@ -3,14 +3,14 @@ import { AbleColumn, AbleOptions } from "../types";
 import { getField } from "../utilities";
 import React from "react";
 
-type AbleTableCellProps<T extends object & { key: string }> = {
-  data: T;
+type AbleTableCellProps<T extends object> = {
+  data: T & { key: string | number };
   column: AbleColumn<T>;
   index: number;
   options?: AbleOptions<T> | undefined;
 };
 
-export function AbleTableCellComponent<T extends object & { key: string }>({
+export function AbleTableCellComponent<T extends object>({
   data,
   column,
   index,

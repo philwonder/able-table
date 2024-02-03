@@ -9,6 +9,11 @@ export function getField<T extends object>(object: T, path: NestedKeyOf<T> | und
   return result;
 }
 
+export function hasKey<T extends object>(data: T): data is T & { key: string | number } {
+  const key = data["key" as keyof T];
+  return typeof key == "number" || typeof key == "string";
+}
+
 export const searchByField = <T extends object>(
   filter: any,
   data: T,
