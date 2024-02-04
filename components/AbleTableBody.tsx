@@ -1,12 +1,15 @@
-import { AbleColumn, AbleOptions } from "../types";
-import { AbleTableCell } from "./AbleTableCell";
 import React from "react";
+import { AbleColumn } from "../types/AbleColumn";
+import { AbleOptions } from "../types/AbleOptions";
+import { AbleStyles } from "../types/AbleStyles";
+import { AbleTableCell } from "./AbleTableCell";
 
 type AbleTableBodyProps<T extends object> = {
   data: (T & { key: string | number })[];
   columns: AbleColumn<T>[];
   onRowClick: ((d: T) => void) | undefined;
-  options: AbleOptions<T> | undefined;
+  options: AbleOptions | undefined;
+  styles: AbleStyles<T> | undefined;
 };
 
 export function AbleTableBody<T extends object>({
@@ -14,6 +17,7 @@ export function AbleTableBody<T extends object>({
   columns,
   onRowClick,
   options,
+  styles,
 }: AbleTableBodyProps<T>) {
   return (
     <tbody>
@@ -29,15 +33,16 @@ export function AbleTableBody<T extends object>({
             style={{
               height: 35,
               ...(onRowClick && { cursor: "pointer" }),
-              ...(typeof options?.rowStyle == "function"
-                ? options.rowStyle(d, i)
-                : options?.rowStyle),
+              ...(typeof styles?.tableRow == "function"
+                ? styles?.tableRow(d, i)
+                : styles?.tableRow),
             }}
           >
             {columns.map((c, j) => (
               <AbleTableCell
-                key={`${d.key}${"field" in c ? c.field : c.name}`}
+                key={`${d.key}${"field" in c ? c.field : c.render}`}
                 options={options}
+                styles={styles}
                 data={d}
                 column={c}
                 index={j}
@@ -50,7 +55,7 @@ export function AbleTableBody<T extends object>({
           <tr>
             {columns.map((c) => (
               <td
-                key={`empty${"field" in c ? c.field : c.name}`}
+                key={`empty${"field" in c ? c.field : c.render}`}
                 style={{ ...c.cellStyle, opacity: 0 }}
               ></td>
             ))}

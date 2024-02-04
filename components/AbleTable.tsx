@@ -1,10 +1,15 @@
-import React, { ReactNode, useEffect, useState } from "react";
-import { AbleAction, AbleColumn, AbleColumnGroup, AbleOptions, NestedKeyOf } from "../types";
+import { ReactNode, useState, useEffect } from "react";
+import { AbleAction } from "../types/AbleAction";
+import { AbleColumn, AbleColumnGroup } from "../types/AbleColumn";
+import { AbleOptions } from "../types/AbleOptions";
+import { hasKey } from "../utilities/isType";
+import { getField } from "../utilities/nestedFieldHelpers";
 import { AbleTableBody } from "./AbleTableBody";
 import { AbleTableHead } from "./AbleTableHead";
-import { getField, hasKey } from "../utilities";
-import { SearchBox } from "./SearchBox";
 import { AbleTablePagination } from "./AbleTablePagination";
+import { NestedKeyOf } from "../types/UtitlityTypes";
+import { AbleStyles } from "../types/AbleStyles";
+import React from "react";
 
 const filterData = <T extends object>(
   data: (T & { key: string | number })[],
@@ -70,8 +75,33 @@ type AbleTableProps<T extends object> = {
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
   title?: ReactNode;
   onRowClick?: (d: T) => void;
+  /**
+   * Custom actions that are not row specific.
+   */
   tableActions?: AbleAction[];
-  options?: AbleOptions<T>;
+  /**
+   * Options for paging, sort and search
+   * - paging?: boolean;
+   * - pageSize?: number;
+   * - pageSizeOptions?: number[];
+   * - showFirstPageButton?: boolean;
+   * - showLastPageButton?: boolean;
+   * - searchable?: boolean;
+   * - sortable?: boolean;
+   */
+  options?: AbleOptions;
+  /**
+   * Styles applied to the individual elements of the table.
+   * - container?: CSSProperties;
+   * - table?: CSSProperties;
+   * - tableBody?: CSSProperties;
+   * - tableHead?: CSSProperties;
+   * - tableFoot?: CSSProperties;
+   * - tableRow?: CSSProperties | ((d?: T, i?: number) => CSSProperties);
+   * - tableHeader?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
+   * - tableCell?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
+   */
+  styles?: AbleStyles<T>;
 } & (T extends { key: string | number } ? {} : { rowKey: NestedKeyOf<T> });
 
 export function AbleTable<T extends object>({
@@ -82,6 +112,7 @@ export function AbleTable<T extends object>({
   onRowClick,
   tableActions,
   options,
+  styles,
 }: AbleTableProps<T>) {
   const [keyedData, setKeyedData] = useState<(T & { key: string | number })[]>([]);
   const [filter, setFilter] = useState("");
@@ -129,7 +160,7 @@ export function AbleTable<T extends object>({
   };
 
   return (
-    <div style={{ zIndex: 1, ...options?.containerStyle }}>
+    <div style={{ zIndex: 1, ...styles?.container }}>
       {(!!title || options?.searchable != false || !!tableActions?.length) && (
         <div style={{ justifyContent: "space-between" }}>
           <h6>{title}</h6>
@@ -145,12 +176,13 @@ export function AbleTable<T extends object>({
           </div>
         </div>
       )}
-      <table>
+      <table style={styles?.table}>
         <AbleTableHead
           columns={columns}
           sortBy={sortBy}
           order={order}
           options={options}
+          styles={styles}
           onUpdateSort={handleSort}
         />
         <AbleTableBody
@@ -158,6 +190,7 @@ export function AbleTable<T extends object>({
           columns={flatColumns}
           onRowClick={onRowClick}
           options={options}
+          styles={styles}
         />
       </table>
       <AbleTablePagination
