@@ -1,12 +1,15 @@
-import { AbleColumn, AbleColumnGroup, AbleOptions } from "../types";
 import React from "react";
+import { AbleColumn, AbleColumnGroup } from "../types/AbleColumn";
+import { AbleOptions } from "../types/AbleOptions";
+import { AbleStyles } from "../types/AbleStyles";
 
 type AbleTableHeadProps<T extends object> = {
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
   sortBy: AbleColumn<T> | undefined;
   order: "asc" | "desc";
   onUpdateSort: (sortBy: AbleColumn<T> | undefined) => void;
-  options: AbleOptions<T> | undefined;
+  options: AbleOptions | undefined;
+  styles: AbleStyles<T> | undefined;
 };
 
 export function AbleTableHead<T extends object>({
@@ -15,15 +18,17 @@ export function AbleTableHead<T extends object>({
   order,
   onUpdateSort,
   options,
+  styles,
 }: AbleTableHeadProps<T>) {
   const renderHeaderCell = (c: AbleColumn<T>, i: number) => (
-    <td
+    <th
+      key={"field" in c ? `H${c.field}` : `H${c.render}`}
       style={{
         zIndex: 11,
         ...(c.sticky && { position: "sticky", left: 0, zIndex: 12 }),
-        ...(typeof options?.headerStyle == "function"
-          ? options.headerStyle(c, i)
-          : options?.headerStyle),
+        ...(typeof styles?.tableHeader == "function"
+          ? styles.tableHeader(c, i)
+          : styles?.tableHeader),
         ...(typeof c.headerStyle == "function" ? c.headerStyle(c, i) : c.headerStyle),
       }}
     >
@@ -67,7 +72,7 @@ export function AbleTableHead<T extends object>({
           </svg>
         </div>
       )}
-    </td>
+    </th>
   );
 
   const visibleColumns = columns.filter((c) => !c.hidden);
@@ -75,50 +80,39 @@ export function AbleTableHead<T extends object>({
   return (
     <thead>
       {!!visibleColumns.some((c) => "groupTitle" in c) && (
-        <tr
-          key={"groupHeaderRow"}
-          style={{
-            ...(typeof options?.rowStyle == "function"
-              ? options.rowStyle()
-              : options?.rowStyle),
-          }}
-        >
+        <tr key={"groupHeaderRow"}>
           {visibleColumns.map((c, i) =>
             "groupTitle" in c ? (
-              <td
+              <th
+                key={`${c.groupTitle}`}
                 style={{
                   textAlign: "center",
-                  ...(typeof options?.headerStyle == "function"
-                    ? options.headerStyle(undefined, i)
-                    : options?.headerStyle),
+                  ...(typeof styles?.tableHeader == "function"
+                    ? styles?.tableHeader(undefined, i)
+                    : styles?.tableHeader),
                   ...c.groupHeaderStyle,
                 }}
                 colSpan={c.columns.length}
               >
                 {c.groupTitle}
-              </td>
+              </th>
             ) : (
-              <td
-                key={"field" in c ? `${c.field}GH` : `${c.name}GH`}
+              <th
+                key={"field" in c ? `${c.field}GH` : `${c.render}GH`}
                 style={{
-                  ...(typeof options?.headerStyle == "function"
-                    ? options.headerStyle(c, i)
-                    : options?.headerStyle),
+                  ...(typeof styles?.tableHeader == "function"
+                    ? styles?.tableHeader(c, i)
+                    : styles?.tableHeader),
                   ...(typeof c.headerStyle == "function"
                     ? c.headerStyle(c, i)
                     : c.headerStyle),
                 }}
-              ></td>
+              ></th>
             )
           )}
         </tr>
       )}
-      <tr
-        key={"HeaderRow"}
-        style={{
-          ...(typeof options?.rowStyle == "function" ? options.rowStyle() : options?.rowStyle),
-        }}
-      >
+      <tr key={"HeaderRow"}>
         {visibleColumns.map((c, i) =>
           "groupTitle" in c
             ? c.columns.filter((co) => !co.hidden).map((c) => renderHeaderCell(c, i))

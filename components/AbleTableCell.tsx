@@ -1,13 +1,16 @@
 import { memo } from "react";
-import { AbleColumn, AbleOptions } from "../types";
-import { getField } from "../utilities";
+import { AbleColumn } from "../types/AbleColumn";
+import { AbleOptions } from "../types/AbleOptions";
+import { getField } from "../utilities/nestedFieldHelpers";
+import { AbleStyles } from "../types/AbleStyles";
 import React from "react";
 
 type AbleTableCellProps<T extends object> = {
   data: T & { key: string | number };
   column: AbleColumn<T>;
   index: number;
-  options?: AbleOptions<T> | undefined;
+  options?: AbleOptions | undefined;
+  styles: AbleStyles<T> | undefined;
 };
 
 export function AbleTableCellComponent<T extends object>({
@@ -15,10 +18,10 @@ export function AbleTableCellComponent<T extends object>({
   column,
   index,
   options,
+  styles,
 }: AbleTableCellProps<T>) {
   return (
     <td
-      key={`${data.key}${"field" in column ? column.field : column.name}`}
       onClick={(e) => {
         if (!column.onClick) return;
         e.stopPropagation();
@@ -27,9 +30,9 @@ export function AbleTableCellComponent<T extends object>({
       style={{
         ...(column.onClick && { cursor: "pointer" }),
         ...(column.sticky && { position: "sticky", left: 0, zIndex: 11 }),
-        ...(typeof options?.cellStyle == "function"
-          ? options.cellStyle(column, index)
-          : options?.cellStyle),
+        ...(typeof styles?.tableCell == "function"
+          ? styles?.tableCell(column, index)
+          : styles?.tableCell),
         ...(typeof column.cellStyle == "function"
           ? column.cellStyle(column, index)
           : column.cellStyle),

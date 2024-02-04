@@ -26,7 +26,9 @@ export function AbleTablePagination({
         onChange={(e) => updatePageSize(+e.target.value)}
       >
         {pageSizeOptions.map((o) => (
-          <option value={o}>{o}</option>
+          <option key={o} value={o}>
+            {o}
+          </option>
         ))}
       </select>
       <button disabled={!currentPage} onClick={() => updateCurrentPage(currentPage - 1)}>
