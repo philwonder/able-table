@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { AbleColumn } from "../types/AbleColumn";
+import { KeyedColumn } from "../types/AbleColumn";
 import { AbleOptions } from "../types/AbleOptions";
 import { getField } from "../utilities/nestedFieldHelpers";
 import { AbleStyles } from "../types/AbleStyles";
@@ -7,7 +7,7 @@ import React from "react";
 
 type AbleTableCellProps<T extends object> = {
   data: T & { key: string | number };
-  column: AbleColumn<T>;
+  column: KeyedColumn<T>;
   index: number;
   options?: AbleOptions | undefined;
   styles: AbleStyles<T> | undefined;

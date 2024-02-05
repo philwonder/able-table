@@ -1,12 +1,12 @@
 import React from "react";
-import { AbleColumn } from "../types/AbleColumn";
+import { KeyedColumn } from "../types/AbleColumn";
 import { AbleOptions } from "../types/AbleOptions";
 import { AbleStyles } from "../types/AbleStyles";
 import { AbleTableCell } from "./AbleTableCell";
 
 type AbleTableBodyProps<T extends object> = {
   data: (T & { key: string | number })[];
-  columns: AbleColumn<T>[];
+  columns: KeyedColumn<T>[];
   onRowClick: ((d: T) => void) | undefined;
   options: AbleOptions | undefined;
   styles: AbleStyles<T> | undefined;
@@ -40,7 +40,7 @@ export function AbleTableBody<T extends object>({
           >
             {columns.map((c, j) => (
               <AbleTableCell
-                key={`${d.key}${"field" in c ? c.field : c.render}`}
+                key={`${d.key}${c.key}`}
                 options={options}
                 styles={styles}
                 data={d}
@@ -54,10 +54,7 @@ export function AbleTableBody<T extends object>({
         <>
           <tr>
             {columns.map((c) => (
-              <td
-                key={`empty${"field" in c ? c.field : c.render}`}
-                style={{ ...c.cellStyle, opacity: 0 }}
-              ></td>
+              <td key={`empty${c.key}`} style={{ ...c.cellStyle, opacity: 0 }}></td>
             ))}
           </tr>
           <tr>
