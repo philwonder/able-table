@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useRef } from "react";
+import React, { ReactNode, useState, useEffect, useRef } from "react";
 import { AbleAction } from "../types/AbleAction";
 import {
   AbleColumn,
@@ -12,7 +12,7 @@ import { AbleTableBody } from "./AbleTableBody";
 import { AbleTableHead } from "./AbleTableHead";
 import { AbleTablePagination } from "./AbleTablePagination";
 import { AbleStyles } from "../types/AbleStyles";
-import React from "react";
+import { flattenColumns } from "../utilities/flattenColumns";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -49,23 +49,19 @@ type AbleTableProps<T extends object> = {
 };
 
 export function AbleTable<T extends object>({
-  data,
-  columns,
+  data: keylessData,
+  columns: keylessColumns,
   title,
   onRowClick,
   tableActions,
   options,
   styles,
 }: AbleTableProps<T>) {
-  let keyedData = useRef<(T & { key: string })[]>([]).current;
-  useEffect(() => {
-    keyedData = data.map((d, i) => ({ ...d, key: `${i}` }));
-  }, [data]);
+  const [data, setData] = useState<(T & { key: string })[]>([]);
+  useEffect(() => setData(keylessData.map((d, i) => ({ ...d, key: `${i}` }))), [keylessData]);
 
-  let keyedColumns = useRef<(KeyedColumn<T> | KeyedColumnGroup<T>)[]>([]).current;
-  useEffect(() => {
-    keyedColumns = mapKeyedColumns(columns);
-  }, [columns]);
+  const [columns, setColumns] = useState<(KeyedColumn<T> | KeyedColumnGroup<T>)[]>([]);
+  useEffect(() => setColumns(mapKeyedColumns(keylessColumns)), [keylessColumns]);
 
   const defaultPageSizeOptions = useRef(
     [10, 25, 50, 100]
@@ -82,16 +78,17 @@ export function AbleTable<T extends object>({
   const [rowsPerPage, setRowsPerPage] = useState(
     options?.pageSize || options?.pageSizeOptions?.[0] || 10
   );
+
   useEffect(() => {
-    const filtered = filterData(keyedData, flatColumns, filter);
+    const filtered = filterData(data, columns, filter);
     const sorted = sortBy ? sortData(filtered, order, sortBy) : filtered;
     setSortedData(sorted);
-  }, [filter, keyedData, keyedColumns]);
+  }, [filter, data, columns]);
 
   useEffect(() => {
     sortBy
       ? setSortedData([...sortData(sortedData, order, sortBy)])
-      : setSortedData(filterData(keyedData, flatColumns, filter));
+      : setSortedData(filterData(data, columns, filter));
   }, [sortBy, order]);
 
   const handleSort = (c?: KeyedColumn<T>) => {
@@ -105,8 +102,6 @@ export function AbleTable<T extends object>({
   const visibleData = options?.paging
     ? sliceData(sortedData, currentPage, rowsPerPage)
     : sortedData;
-
-  const flatColumns = flattenColumns(keyedColumns);
 
   return (
     <div style={{ zIndex: 1, ...styles?.container }}>
@@ -127,7 +122,7 @@ export function AbleTable<T extends object>({
       )}
       <table style={styles?.table}>
         <AbleTableHead
-          columns={keyedColumns}
+          columns={columns}
           sortBy={sortBy}
           order={order}
           options={options}
@@ -136,7 +131,7 @@ export function AbleTable<T extends object>({
         />
         <AbleTableBody
           data={visibleData}
-          columns={flatColumns}
+          columns={columns}
           onRowClick={onRowClick}
           options={options}
           styles={styles}
@@ -159,11 +154,12 @@ export function AbleTable<T extends object>({
 
 function filterData<T extends object>(
   data: (T & { key: string })[],
-  columns: KeyedColumn<T>[],
+  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
   filter: string
 ) {
+  const flatColumns = flattenColumns(columns);
   return data.filter((d) =>
-    columns.some(
+    flatColumns.some(
       (c) => c.searchable != false && (c.search?.(d, filter) || standardSearch(d, c, filter))
     )
   );
@@ -217,14 +213,9 @@ function sliceData<T extends object>(data: T[], page: number, rowsPerPage: numbe
   return data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 }
 
-function flattenColumns<T extends object>(columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[]) {
-  return columns
-    .filter((c) => !c.hidden) //filter out hidden columns and groups
-    .map((c) => ("groupTitle" in c ? c.columns.filter((c) => !c.hidden) : c)) //filter out hidden columns within visible groups
-    .flat();
-}
-
-function mapKeyedColumns<T extends object>(columns: (AbleColumn<T> | AbleColumnGroup<T>)[]) {
+function mapKeyedColumns<T extends object>(
+  columns: (AbleColumn<T> | AbleColumnGroup<T>)[]
+): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
   return columns.map((c, i) =>
     "groupTitle" in c
       ? {
