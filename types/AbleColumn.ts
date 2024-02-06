@@ -9,8 +9,15 @@ export type AbleColumn<T extends object> = {
   headerTip?: string;
   width?: string | number;
   search?: (d: T, filter: any) => boolean;
+  /** A custom sort function.
+   *
+   * Must be provided for columns without a field property to be sortable.
+   */
   sort?: (d1: T, d2: T) => number;
   onClick?: (d: T) => void;
+  /** Whether the data can be sorted by this column.
+   * @default true unless options.sortable is false
+   */
   sortable?: boolean;
   searchable?: boolean;
   hidden?: boolean;
@@ -31,4 +38,10 @@ export type AbleColumnGroup<T extends object> = {
   groupHeaderTip?: string;
   hidden?: boolean;
   columns: AbleColumn<T>[];
+};
+
+export type KeyedColumn<T extends object> = AbleColumn<T> & { key: string };
+export type KeyedColumnGroup<T extends object> = Omit<AbleColumnGroup<T>, "columns"> & {
+  key: string;
+  columns: KeyedColumn<T>[];
 };

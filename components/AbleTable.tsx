@@ -1,74 +1,18 @@
-import { ReactNode, useState, useEffect } from "react";
+import React, { ReactNode, useState, useEffect, useRef } from "react";
 import { AbleAction } from "../types/AbleAction";
-import { AbleColumn, AbleColumnGroup } from "../types/AbleColumn";
+import {
+  AbleColumn,
+  AbleColumnGroup,
+  KeyedColumn,
+  KeyedColumnGroup,
+} from "../types/AbleColumn";
 import { AbleOptions } from "../types/AbleOptions";
-import { hasKey } from "../utilities/isType";
 import { getField } from "../utilities/nestedFieldHelpers";
 import { AbleTableBody } from "./AbleTableBody";
 import { AbleTableHead } from "./AbleTableHead";
 import { AbleTablePagination } from "./AbleTablePagination";
-import { NestedKeyOf } from "../types/UtitlityTypes";
 import { AbleStyles } from "../types/AbleStyles";
-import React from "react";
-
-const filterData = <T extends object>(
-  data: (T & { key: string | number })[],
-  columns: AbleColumn<T>[],
-  filter: string
-) =>
-  data.filter((d) =>
-    columns.some(
-      (c) => c.searchable != false && (c.search?.(d, filter) || standardSearch(d, c, filter))
-    )
-  );
-
-const standardSearch = <T extends object>(datum: T, column: AbleColumn<T>, filter: string) => {
-  const cellData =
-    "field" in column
-      ? getField(datum, column.field)
-      : typeof column.render == "function"
-      ? column.render(datum)
-      : column.render;
-  return cellData?.toString().toLowerCase().includes(filter.toLowerCase());
-};
-
-const sortData = <T extends object>(
-  data: (T & { key: string | number })[],
-  order: "asc" | "desc",
-  sortBy: AbleColumn<T>
-) =>
-  order == "desc"
-    ? data.sort((a, b) => sortBy.sort?.(a, b) ?? standardSort(sortBy)(a, b))
-    : data.sort((a, b) => sortBy.sort?.(b, a) ?? standardSort(sortBy)(b, a));
-
-const standardSort =
-  <T extends object>(sortBy: AbleColumn<T> | undefined) =>
-  (a: T, b: T) => {
-    if (sortBy == undefined || !("field" in sortBy)) {
-      return 0;
-    }
-    const sortByA = getField(a, sortBy.field);
-    const sortByB = getField(b, sortBy.field);
-    switch (typeof sortByA) {
-      case "boolean":
-        return (sortByA ? 0 : 1) - (sortByB ? 0 : 1);
-      case "number":
-        return (sortByB ?? 0) - (sortByA ?? 0);
-      case "string":
-        return sortByA.localeCompare(sortByB);
-      default:
-        return 0;
-    }
-  };
-
-const sliceData = <T extends object>(data: T[], page: number, rowsPerPage: number) =>
-  data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
-const flattenColumns = <T extends object>(columns: (AbleColumn<T> | AbleColumnGroup<T>)[]) =>
-  columns
-    .filter((c) => !c.hidden) //filter out hidden columns and groups
-    .map((c) => ("groupTitle" in c ? c.columns.filter((c) => !c.hidden) : c)) //filter out hidden columns within visible groups
-    .flat();
+import { flattenColumns } from "../utilities/flattenColumns";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -102,62 +46,62 @@ type AbleTableProps<T extends object> = {
    * - tableCell?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
    */
   styles?: AbleStyles<T>;
-} & (T extends { key: string | number } ? {} : { rowKey: NestedKeyOf<T> });
+};
 
 export function AbleTable<T extends object>({
-  data,
-  columns,
-  rowKey,
+  data: keylessData,
+  columns: keylessColumns,
   title,
   onRowClick,
   tableActions,
   options,
   styles,
 }: AbleTableProps<T>) {
-  const [keyedData, setKeyedData] = useState<(T & { key: string | number })[]>([]);
+  const [data, setData] = useState<(T & { key: string })[]>([]);
+  useEffect(() => setData(keylessData.map((d, i) => ({ ...d, key: `${i}` }))), [keylessData]);
+
+  const [columns, setColumns] = useState<(KeyedColumn<T> | KeyedColumnGroup<T>)[]>([]);
+  useEffect(() => setColumns(mapKeyedColumns(keylessColumns)), [keylessColumns]);
+
+  const defaultPageSizeOptions = useRef(
+    [10, 25, 50, 100]
+      .filter((n) => n != options?.pageSize)
+      .concat(options?.pageSize ? [options.pageSize] : [])
+      .sort((a, b) => a - b)
+  ).current;
+
   const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState<AbleColumn<T>>();
+  const [sortBy, setSortBy] = useState<KeyedColumn<T>>();
   const [order, setOrder] = useState<"asc" | "desc">("asc");
-  const [sortedData, setSortedData] = useState<(T & { key: string | number })[]>([]);
+  const [sortedData, setSortedData] = useState<(T & { key: string })[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(
     options?.pageSize || options?.pageSizeOptions?.[0] || 10
   );
-  const defaultPageSizeOptions = [10, 25, 50, 100]
-    .filter((n) => n != options?.pageSize)
-    .concat(options?.pageSize ? [options.pageSize] : [])
-    .sort((a, b) => a - b);
-
-  const visibleData = options?.paging
-    ? sliceData(sortedData, currentPage, rowsPerPage)
-    : sortedData;
-  const flatColumns = flattenColumns(columns);
 
   useEffect(() => {
-    setKeyedData(
-      data.map((d) => ({ ...d, key: hasKey(d) ? d.key : `${getField(d, rowKey)}` }))
-    );
-  }, [data]);
-
-  useEffect(() => {
-    const filtered = filterData(keyedData, flatColumns, filter);
+    const filtered = filterData(data, columns, filter);
     const sorted = sortBy ? sortData(filtered, order, sortBy) : filtered;
     setSortedData(sorted);
-  }, [filter, keyedData, columns]);
+  }, [filter, data, columns]);
 
   useEffect(() => {
     sortBy
       ? setSortedData([...sortData(sortedData, order, sortBy)])
-      : setSortedData(filterData(keyedData, flatColumns, filter));
+      : setSortedData(filterData(data, columns, filter));
   }, [sortBy, order]);
 
-  const handleSort = (c?: AbleColumn<T>) => {
-    setCurrentPage(0); // since sort has changed, the page we were on means nothing!
+  const handleSort = (c?: KeyedColumn<T>) => {
+    setCurrentPage(0);
     if (sortBy != c) {
       setSortBy(c);
       setOrder("desc");
     } else order == "desc" ? setOrder("asc") : setSortBy(undefined);
   };
+
+  const visibleData = options?.paging
+    ? sliceData(sortedData, currentPage, rowsPerPage)
+    : sortedData;
 
   return (
     <div style={{ zIndex: 1, ...styles?.container }}>
@@ -187,7 +131,7 @@ export function AbleTable<T extends object>({
         />
         <AbleTableBody
           data={visibleData}
-          columns={flatColumns}
+          columns={columns}
           onRowClick={onRowClick}
           options={options}
           styles={styles}
@@ -205,5 +149,80 @@ export function AbleTable<T extends object>({
         }}
       />
     </div>
+  );
+}
+
+function filterData<T extends object>(
+  data: (T & { key: string })[],
+  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
+  filter: string
+) {
+  const flatColumns = flattenColumns(columns);
+  return data.filter((d) =>
+    flatColumns.some(
+      (c) => c.searchable != false && (c.search?.(d, filter) || standardSearch(d, c, filter))
+    )
+  );
+}
+
+function standardSearch<T extends object>(
+  datum: T & { key: string },
+  column: KeyedColumn<T>,
+  filter: string
+) {
+  const cellData =
+    "field" in column
+      ? getField(datum, column.field)
+      : typeof column.render == "function"
+      ? column.render(datum)
+      : column.render;
+  return cellData?.toString().toLowerCase().includes(filter.toLowerCase());
+}
+
+function sortData<T extends object>(
+  data: (T & { key: string })[],
+  order: "asc" | "desc",
+  sortBy: KeyedColumn<T>
+) {
+  return order == "desc"
+    ? data.sort((a, b) => sortBy.sort?.(a, b) ?? standardSort(sortBy)(a, b))
+    : data.sort((a, b) => sortBy.sort?.(b, a) ?? standardSort(sortBy)(b, a));
+}
+
+function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
+  return (a: T & { key: string }, b: T & { key: string }) => {
+    if (sortBy == undefined || !("field" in sortBy)) {
+      return 0;
+    }
+    const sortByA = getField(a, sortBy.field);
+    const sortByB = getField(b, sortBy.field);
+    switch (typeof sortByA) {
+      case "boolean":
+        return (sortByA ? 0 : 1) - (sortByB ? 0 : 1);
+      case "number":
+        return (sortByB ?? 0) - (sortByA ?? 0);
+      case "string":
+        return sortByA.localeCompare(sortByB);
+      default:
+        return 0;
+    }
+  };
+}
+
+function sliceData<T extends object>(data: T[], page: number, rowsPerPage: number) {
+  return data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+}
+
+function mapKeyedColumns<T extends object>(
+  columns: (AbleColumn<T> | AbleColumnGroup<T>)[]
+): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
+  return columns.map((c, i) =>
+    "groupTitle" in c
+      ? {
+          ...c,
+          key: `${i}`,
+          columns: c.columns.map((c2, j) => ({ ...c2, key: `${i}${j}` })),
+        }
+      : { ...c, key: `${i}` }
   );
 }

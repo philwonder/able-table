@@ -1,13 +1,13 @@
 import React from "react";
-import { AbleColumn, AbleColumnGroup } from "../types/AbleColumn";
+import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
 import { AbleOptions } from "../types/AbleOptions";
 import { AbleStyles } from "../types/AbleStyles";
 
 type AbleTableHeadProps<T extends object> = {
-  columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
-  sortBy: AbleColumn<T> | undefined;
+  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
+  sortBy: KeyedColumn<T> | undefined;
   order: "asc" | "desc";
-  onUpdateSort: (sortBy: AbleColumn<T> | undefined) => void;
+  onUpdateSort: (sortBy: KeyedColumn<T> | undefined) => void;
   options: AbleOptions | undefined;
   styles: AbleStyles<T> | undefined;
 };
@@ -20,60 +20,64 @@ export function AbleTableHead<T extends object>({
   options,
   styles,
 }: AbleTableHeadProps<T>) {
-  const renderHeaderCell = (c: AbleColumn<T>, i: number) => (
-    <th
-      key={"field" in c ? `H${c.field}` : `H${c.render}`}
-      style={{
-        zIndex: 11,
-        ...(c.sticky && { position: "sticky", left: 0, zIndex: 12 }),
-        ...(typeof styles?.tableHeader == "function"
-          ? styles.tableHeader(c, i)
-          : styles?.tableHeader),
-        ...(typeof c.headerStyle == "function" ? c.headerStyle(c, i) : c.headerStyle),
-      }}
-    >
-      {options?.sortable == false || c.sortable == false ? (
-        c.title
-      ) : (
-        <div
-          style={{
-            display: "inline-flex",
-            flexDirection: "column",
-            width: "fit-content",
-            maxWidth: "fit-content",
-            alignItems: "center",
-            cursor: "pointer",
-            margin: "6 0 6 0",
-          }}
-          onClick={() => onUpdateSort(c)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="24px"
-            viewBox="0 0 24 24"
-            width="24px"
-            fill="#000000"
-            style={{ margin: -3, opacity: sortBy == c && order == "asc" ? 1 : 0 }}
+  function renderHeaderCell(c: KeyedColumn<T>, i: number) {
+    const sortable =
+      !(options?.sortable == false) && !(c.sortable == false) && ("field" in c || c.sort);
+    return (
+      <th
+        key={`H${c.key}`}
+        style={{
+          zIndex: 11,
+          ...(c.sticky && { position: "sticky", left: 0, zIndex: 12 }),
+          ...(typeof styles?.tableHeader == "function"
+            ? styles.tableHeader(c, i)
+            : styles?.tableHeader),
+          ...(typeof c.headerStyle == "function" ? c.headerStyle(c, i) : c.headerStyle),
+        }}
+      >
+        {sortable ? (
+          <div
+            style={{
+              display: "inline-flex",
+              flexDirection: "column",
+              width: "fit-content",
+              maxWidth: "fit-content",
+              alignItems: "center",
+              cursor: "pointer",
+              margin: "6 0 6 0",
+            }}
+            onClick={() => onUpdateSort(c)}
           >
-            <path d="M0 0h24v24H0V0z" fill="none" />
-            <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z" />
-          </svg>
-          {c.title}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            height="24px"
-            viewBox="0 0 24 24"
-            width="24px"
-            fill="#000000"
-            style={{ margin: -3, opacity: sortBy == c && order == "desc" ? 1 : 0 }}
-          >
-            <path d="M24 24H0V0h24v24z" fill="none" opacity=".87" />
-            <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6-1.41-1.41z" />
-          </svg>
-        </div>
-      )}
-    </th>
-  );
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="24px"
+              viewBox="0 0 24 24"
+              width="24px"
+              fill="#000000"
+              style={{ margin: -3, opacity: sortBy == c && order == "asc" ? 1 : 0 }}
+            >
+              <path d="M0 0h24v24H0V0z" fill="none" />
+              <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z" />
+            </svg>
+            {c.title}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              height="24px"
+              viewBox="0 0 24 24"
+              width="24px"
+              fill="#000000"
+              style={{ margin: -3, opacity: sortBy == c && order == "desc" ? 1 : 0 }}
+            >
+              <path d="M24 24H0V0h24v24z" fill="none" opacity=".87" />
+              <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6-1.41-1.41z" />
+            </svg>
+          </div>
+        ) : (
+          c.title
+        )}
+      </th>
+    );
+  }
 
   const visibleColumns = columns.filter((c) => !c.hidden);
 
@@ -84,7 +88,7 @@ export function AbleTableHead<T extends object>({
           {visibleColumns.map((c, i) =>
             "groupTitle" in c ? (
               <th
-                key={`${c.groupTitle}`}
+                key={`${c.key}`}
                 style={{
                   textAlign: "center",
                   ...(typeof styles?.tableHeader == "function"
@@ -98,7 +102,7 @@ export function AbleTableHead<T extends object>({
               </th>
             ) : (
               <th
-                key={"field" in c ? `${c.field}GH` : `${c.render}GH`}
+                key={`GH${c.key}`}
                 style={{
                   ...(typeof styles?.tableHeader == "function"
                     ? styles?.tableHeader(c, i)
