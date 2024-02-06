@@ -21,7 +21,6 @@ export function AbleTableBody<T extends object>({
   styles,
 }: AbleTableBodyProps<T>) {
   const flatColumns = flattenColumns(columns);
-  console.log(columns);
   return (
     <tbody>
       {!!data.length ? (
