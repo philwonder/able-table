@@ -2,11 +2,11 @@ import React from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
 import { AbleOptions } from "../types/AbleOptions";
 import { AbleStyles } from "../types/AbleStyles";
+import { isColumnGroup } from "../utilities/isType";
 
 type AbleTableHeadProps<T extends object> = {
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
-  sortBy: KeyedColumn<T> | undefined;
-  order: "asc" | "desc";
+  sort: { col?: KeyedColumn<T>; desc: boolean };
   onUpdateSort: (sortBy: KeyedColumn<T> | undefined) => void;
   options: AbleOptions | undefined;
   styles: AbleStyles<T> | undefined;
@@ -14,8 +14,7 @@ type AbleTableHeadProps<T extends object> = {
 
 export function AbleTableHead<T extends object>({
   columns,
-  sortBy,
-  order,
+  sort,
   onUpdateSort,
   options,
   styles,
@@ -54,7 +53,7 @@ export function AbleTableHead<T extends object>({
               viewBox="0 0 24 24"
               width="24px"
               fill="#000000"
-              style={{ margin: -3, opacity: sortBy == c && order == "asc" ? 1 : 0 }}
+              style={{ margin: -3, opacity: sort.col == c && !sort.desc ? 1 : 0 }}
             >
               <path d="M0 0h24v24H0V0z" fill="none" />
               <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z" />
@@ -66,7 +65,7 @@ export function AbleTableHead<T extends object>({
               viewBox="0 0 24 24"
               width="24px"
               fill="#000000"
-              style={{ margin: -3, opacity: sortBy == c && order == "desc" ? 1 : 0 }}
+              style={{ margin: -3, opacity: sort.col == c && sort.desc ? 1 : 0 }}
             >
               <path d="M24 24H0V0h24v24z" fill="none" opacity=".87" />
               <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6-1.41-1.41z" />
@@ -83,10 +82,10 @@ export function AbleTableHead<T extends object>({
 
   return (
     <thead>
-      {!!visibleColumns.some((c) => "groupTitle" in c) && (
+      {!!visibleColumns.some(isColumnGroup) && (
         <tr key={"groupHeaderRow"}>
           {visibleColumns.map((c, i) =>
-            "groupTitle" in c ? (
+            isColumnGroup(c) ? (
               <th
                 key={`${c.key}`}
                 style={{
@@ -118,7 +117,7 @@ export function AbleTableHead<T extends object>({
       )}
       <tr key={"HeaderRow"}>
         {visibleColumns.map((c, i) =>
-          "groupTitle" in c
+          isColumnGroup(c)
             ? c.columns.filter((co) => !co.hidden).map((c) => renderHeaderCell(c, i))
             : renderHeaderCell(c, i)
         )}

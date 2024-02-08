@@ -1,4 +1,7 @@
-export function hasKey<T extends object>(data: T): data is T & { key: string | number } {
-  const key = data["key" as keyof T];
-  return typeof key == "number" || typeof key == "string";
+import { AbleColumn, AbleColumnGroup } from "../types/AbleColumn";
+
+export function isColumnGroup<T extends object>(
+  c: AbleColumn<T> | AbleColumnGroup<T>
+): c is AbleColumnGroup<T> {
+  return (c as AbleColumnGroup<T>)?.groupTitle != undefined;
 }

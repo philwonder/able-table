@@ -1,17 +1,16 @@
 import React from "react";
 
 type SearchBoxProps = {
-  value: string;
-  updateValue: (value: string) => void;
+  onChange: (value: string) => void;
 };
 
-export function SearchBox({ value, updateValue }: SearchBoxProps) {
+export function SearchBox({ onChange }: SearchBoxProps) {
   return (
     <input
       type="search"
       placeholder="Search"
-      onChange={(e) => updateValue(e.target.value)}
-      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{ lineHeight: "30px" }}
     />
   );
 }

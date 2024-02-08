@@ -1,6 +1,7 @@
+import { ReactNode } from "react";
 import { NestedKeyOf } from "../types/UtitlityTypes";
 
-export function getField<T extends object>(object: T, path: NestedKeyOf<T>) {
+export function getField<T extends object>(object: T, path: NestedKeyOf<T>): ReactNode {
   const keys = path.split(".");
   let result: any = object;
   for (const key of keys) {
