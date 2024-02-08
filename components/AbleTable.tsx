@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useRef } from "react";
+import React, { ReactNode, useState, useEffect, useRef, useMemo } from "react";
 import { AbleAction } from "../types/AbleAction";
 import {
   AbleColumn,
@@ -13,6 +13,8 @@ import { AbleTableHead } from "./AbleTableHead";
 import { AbleTablePagination } from "./AbleTablePagination";
 import { AbleStyles } from "../types/AbleStyles";
 import { flattenColumns } from "../utilities/flattenColumns";
+import { SearchBox } from "./SearchBox";
+import { isColumnGroup } from "../utilities/isType";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -49,69 +51,60 @@ type AbleTableProps<T extends object> = {
 };
 
 export function AbleTable<T extends object>({
-  data: keylessData,
-  columns: keylessColumns,
   title,
   onRowClick,
   tableActions,
   options,
   styles,
+  ...props
 }: AbleTableProps<T>) {
-  const [data, setData] = useState<(T & { key: string })[]>([]);
-  useEffect(() => setData(keylessData.map((d, i) => ({ ...d, key: `${i}` }))), [keylessData]);
+  const data = useMemo(() => props.data.map((d, i) => ({ ...d, key: `${i}` })), [props.data]);
+  const columns = useMemo(() => mapKeyedColumns(props.columns), [props.columns]);
 
-  const [columns, setColumns] = useState<(KeyedColumn<T> | KeyedColumnGroup<T>)[]>([]);
-  useEffect(() => setColumns(mapKeyedColumns(keylessColumns)), [keylessColumns]);
-
-  const defaultPageSizeOptions = useRef(
-    [10, 25, 50, 100]
-      .filter((n) => n != options?.pageSize)
-      .concat(options?.pageSize ? [options.pageSize] : [])
-      .sort((a, b) => a - b)
+  const pageSizeOptions = useRef(
+    options?.pageSizeOptions ??
+      [10, 25, 50, 100]
+        .filter((n) => n != options?.pageSize)
+        .concat(options?.pageSize ? [options.pageSize] : [])
+        .sort((a, b) => a - b)
   ).current;
 
-  const [filter, setFilter] = useState("");
-  const [sortBy, setSortBy] = useState<KeyedColumn<T>>();
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
-  const [sortedData, setSortedData] = useState<(T & { key: string })[]>([]);
+  const [sort, setSort] = useState<{ col?: KeyedColumn<T>; desc: boolean }>({ desc: false });
+  const [sortedData, setSortedData] = useState<(T & { key: string })[]>(data);
   const [currentPage, setCurrentPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(
-    options?.pageSize || options?.pageSizeOptions?.[0] || 10
-  );
+  const [rowsPerPage, setRowsPerPage] = useState(options?.pageSize || pageSizeOptions[0]);
 
-  useEffect(() => {
+  const handleSearch = (filter: string) => {
     const filtered = filterData(data, columns, filter);
-    const sorted = sortBy ? sortData(filtered, order, sortBy) : filtered;
+    const sorted = sort.col ? sortData(filtered, sort) : filtered;
     setSortedData(sorted);
-  }, [filter, data, columns]);
-
-  useEffect(() => {
-    sortBy
-      ? setSortedData([...sortData(sortedData, order, sortBy)])
-      : setSortedData(filterData(data, columns, filter));
-  }, [sortBy, order]);
-
-  const handleSort = (c?: KeyedColumn<T>) => {
-    setCurrentPage(0);
-    if (sortBy != c) {
-      setSortBy(c);
-      setOrder("desc");
-    } else order == "desc" ? setOrder("asc") : setSortBy(undefined);
   };
 
-  const visibleData = options?.paging
+  const handleSort = (col?: KeyedColumn<T>) => {
+    setCurrentPage(0);
+    const newSort = sort.col != col ? { col, desc: true } : { ...sort, desc: !sort.desc };
+    setSortedData([...sortData(sortedData, newSort)]);
+    setSort(newSort);
+  };
+
+  const visibleData = !!options?.paging
     ? sliceData(sortedData, currentPage, rowsPerPage)
     : sortedData;
 
   return (
-    <div style={{ zIndex: 1, ...styles?.container }}>
+    <div style={{ zIndex: 1, width: "fit-content", ...styles?.container }}>
       {(!!title || options?.searchable != false || !!tableActions?.length) && (
-        <div style={{ justifyContent: "space-between" }}>
-          <h6>{title}</h6>
-          <div style={{ display: "flex" }}>
-            {/* {options?.searchable != false && (
-              <SearchBox value={filter} updateValue={setFilter} />
-            )} */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: 10,
+          }}
+        >
+          <h2>{title}</h2>
+          <div>
+            {options?.searchable != false && <SearchBox onChange={handleSearch} />}
             {tableActions?.map((a, i) => (
               <button onClick={a.onClick} disabled={a.disabled}>
                 {a.render}
@@ -123,8 +116,7 @@ export function AbleTable<T extends object>({
       <table style={styles?.table}>
         <AbleTableHead
           columns={columns}
-          sortBy={sortBy}
-          order={order}
+          sort={sort}
           options={options}
           styles={styles}
           onUpdateSort={handleSort}
@@ -139,7 +131,7 @@ export function AbleTable<T extends object>({
       </table>
       <AbleTablePagination
         rowsPerPage={rowsPerPage}
-        pageSizeOptions={options?.pageSizeOptions ?? defaultPageSizeOptions}
+        pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
         currentPage={currentPage}
         isLastPage={sortedData.length < rowsPerPage}
         updateCurrentPage={setCurrentPage}
@@ -181,12 +173,11 @@ function standardSearch<T extends object>(
 
 function sortData<T extends object>(
   data: (T & { key: string })[],
-  order: "asc" | "desc",
-  sortBy: KeyedColumn<T>
+  sort: { col?: KeyedColumn<T>; desc: boolean }
 ) {
-  return order == "desc"
-    ? data.sort((a, b) => sortBy.sort?.(a, b) ?? standardSort(sortBy)(a, b))
-    : data.sort((a, b) => sortBy.sort?.(b, a) ?? standardSort(sortBy)(b, a));
+  return sort.desc
+    ? data.sort((a, b) => sort.col?.sort?.(a, b) ?? standardSort(sort.col)(a, b))
+    : data.sort((a, b) => sort.col?.sort?.(b, a) ?? standardSort(sort.col)(b, a));
 }
 
 function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
@@ -200,9 +191,9 @@ function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
       case "boolean":
         return (sortByA ? 0 : 1) - (sortByB ? 0 : 1);
       case "number":
-        return (sortByB ?? 0) - (sortByA ?? 0);
+        return (sortByB ? +sortByB : 0) - (sortByA ?? 0);
       case "string":
-        return sortByA.localeCompare(sortByB);
+        return sortByA.localeCompare(`${sortByB}`);
       default:
         return 0;
     }
@@ -217,7 +208,7 @@ function mapKeyedColumns<T extends object>(
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[]
 ): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
   return columns.map((c, i) =>
-    "groupTitle" in c
+    isColumnGroup(c)
       ? {
           ...c,
           key: `${i}`,
@@ -225,4 +216,19 @@ function mapKeyedColumns<T extends object>(
         }
       : { ...c, key: `${i}` }
   );
+}
+
+function mapWidthColumns<T extends object>(
+  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
+  widths: Record<string, number>
+): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
+  return columns.map((c) => {
+    if (isColumnGroup(c)) {
+      const columns = c.columns.map((c2) => {
+        return { ...c2, width: widths[c2.key] };
+      });
+      return { ...c, columns };
+    }
+    return { ...c, width: widths[c.key] };
+  });
 }
