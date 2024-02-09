@@ -97,7 +97,7 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
                 }}
                 colSpan={c.columns.length}
               >
-                {c.groupTitle}
+                {c.groupHeader}
               </th>
             ) : (
               <th
