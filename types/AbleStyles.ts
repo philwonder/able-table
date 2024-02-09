@@ -28,7 +28,7 @@ export type AbleStyles<T extends object> = {
   tableRow?: CSSProperties | ((d?: T, i?: number) => CSSProperties);
   /**
    * Styles applied to the \<th> elements.
-   * Overridedn by column headerStyle prop.
+   * Overridden by column headerStyle prop.
    */
   tableHeader?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   /**

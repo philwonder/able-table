@@ -3,11 +3,23 @@ import { NestedKeyOf } from "./UtitlityTypes";
 
 export type AbleColumn<T extends object> = {
   title?: ReactNode;
+  /**
+   * Styles applied to the \<td> elements.
+   * Overrides thes styles tableCell prop.
+   */
   cellStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
-  cellTip?: (d: T) => string;
+  // cellTip?: (d: T) => string; //not implemented yet
+  /**
+   * Styles applied to the \<th> elements.
+   * Overrides thes styles tableHeader prop.
+   */
   headerStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
-  headerTip?: string;
+  // headerTip?: string; //not implemented yet
   width?: string | number;
+  /** A custom search function.
+   *
+   * If omitted, the search is against the field data or render value.
+   */
   search?: (d: T, filter: any) => boolean;
   /** A custom sort function.
    *
@@ -19,8 +31,17 @@ export type AbleColumn<T extends object> = {
    * @default true unless options.sortable is false
    */
   sortable?: boolean;
+  /** Whether this column will be compared against the search string.
+   * @default true unless options.searchable is false
+   */
   searchable?: boolean;
+  /**
+   * @default false
+   */
   hidden?: boolean;
+  /**
+   * @default false
+   */
   sticky?: boolean;
 } & (
   | {
