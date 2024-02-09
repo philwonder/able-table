@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useRef, useMemo } from "react";
+import React, { ReactNode, useState, useRef, useMemo, useLayoutEffect } from "react";
 import { AbleAction } from "../types/AbleAction";
 import {
   AbleColumn,
@@ -59,7 +59,7 @@ export function AbleTable<T extends object>({
   ...props
 }: AbleTableProps<T>) {
   const data = useMemo(() => props.data.map((d, i) => ({ ...d, key: `${i}` })), [props.data]);
-  const columns = useMemo(() => mapKeyedColumns(props.columns), [props.columns]);
+  const [columns, setColumns] = useState(() => mapKeyedColumns(props.columns));
 
   const pageSizeOptions = useRef(
     options?.pageSizeOptions ??
@@ -68,11 +68,18 @@ export function AbleTable<T extends object>({
         .concat(options?.pageSize ? [options.pageSize] : [])
         .sort((a, b) => a - b)
   ).current;
+  const [paging, setPaging] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(options?.pageSize || pageSizeOptions[0]);
 
   const [sort, setSort] = useState<{ col?: KeyedColumn<T>; desc: boolean }>({ desc: false });
   const [sortedData, setSortedData] = useState<(T & { key: string })[]>(data);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(options?.pageSize || pageSizeOptions[0]);
+
+  const columnRef = useRef<Record<string, number>>({});
+  useLayoutEffect(() => {
+    setColumns(mapWidthColumns(columns, columnRef.current));
+    setPaging(!!options?.paging);
+  }, []);
 
   const handleSearch = (filter: string) => {
     const filtered = filterData(data, columns, filter);
@@ -87,9 +94,7 @@ export function AbleTable<T extends object>({
     setSort(newSort);
   };
 
-  const visibleData = !!options?.paging
-    ? sliceData(sortedData, currentPage, rowsPerPage)
-    : sortedData;
+  const visibleData = paging ? sliceData(sortedData, currentPage, rowsPerPage) : sortedData;
 
   return (
     <div style={{ zIndex: 1, width: "fit-content", ...styles?.container }}>
@@ -115,6 +120,7 @@ export function AbleTable<T extends object>({
       )}
       <table style={styles?.table}>
         <AbleTableHead
+          ref={(r) => (columnRef.current[r?.id ?? "null"] = r?.clientWidth ?? 0)}
           columns={columns}
           sort={sort}
           options={options}

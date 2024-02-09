@@ -37,7 +37,6 @@ export function AbleTableCellComponent<T extends object>({
         ...(typeof column.cellStyle == "function"
           ? column.cellStyle(column, index)
           : column.cellStyle),
-        ...(column.width && { width: column.width }),
       }}
     >
       {typeof column.render == "function"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ForwardedRef, forwardRef, ForwardRefExoticComponent, JSX } from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
 import { AbleOptions } from "../types/AbleOptions";
 import { AbleStyles } from "../types/AbleStyles";
@@ -12,18 +12,17 @@ type AbleTableHeadProps<T extends object> = {
   styles: AbleStyles<T> | undefined;
 };
 
-export function AbleTableHead<T extends object>({
-  columns,
-  sort,
-  onUpdateSort,
-  options,
-  styles,
-}: AbleTableHeadProps<T>) {
+export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extends object>(
+  { columns, sort, onUpdateSort, options, styles }: AbleTableHeadProps<T>,
+  ref: ForwardedRef<HTMLTableCellElement>
+) {
   function renderHeaderCell(c: KeyedColumn<T>, i: number) {
     const sortable =
       !(options?.sortable == false) && !(c.sortable == false) && ("field" in c || c.sort);
     return (
       <th
+        ref={ref}
+        id={c.key}
         key={`H${c.key}`}
         style={{
           zIndex: 11,
@@ -32,6 +31,7 @@ export function AbleTableHead<T extends object>({
             ? styles.tableHeader(c, i)
             : styles?.tableHeader),
           ...(typeof c.headerStyle == "function" ? c.headerStyle(c, i) : c.headerStyle),
+          width: c.width,
         }}
       >
         {sortable ? (
@@ -124,4 +124,7 @@ export function AbleTableHead<T extends object>({
       </tr>
     </thead>
   );
-}
+}) as (<T extends object>(
+  props: AbleTableHeadProps<T> & { ref?: ForwardedRef<HTMLTableCellElement> }
+) => JSX.Element) &
+  ForwardRefExoticComponent<AbleTableHeadProps<object>>;
