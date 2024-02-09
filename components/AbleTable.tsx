@@ -135,17 +135,19 @@ export function AbleTable<T extends object>({
           styles={styles}
         />
       </table>
-      <AbleTablePagination
-        rowsPerPage={rowsPerPage}
-        pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
-        currentPage={currentPage}
-        isLastPage={sortedData.length < rowsPerPage}
-        updateCurrentPage={setCurrentPage}
-        updateRowsPerPage={(rows) => {
-          setRowsPerPage(rows);
-          setCurrentPage(0);
-        }}
-      />
+      {paging && (
+        <AbleTablePagination
+          rowsPerPage={rowsPerPage}
+          pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
+          currentPage={currentPage}
+          isLastPage={sortedData.length < rowsPerPage}
+          updateCurrentPage={setCurrentPage}
+          updateRowsPerPage={(rows) => {
+            setRowsPerPage(rows);
+            setCurrentPage(0);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -228,13 +230,16 @@ function mapWidthColumns<T extends object>(
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
   widths: Record<string, number>
 ): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
+  const totalWidth = Object.values(widths).reduce((a, b) => a + b);
   return columns.map((c) => {
     if (isColumnGroup(c)) {
       const columns = c.columns.map((c2) => {
-        return { ...c2, width: widths[c2.key] };
+        const width = `${Math.round((widths[c2.key] / totalWidth) * 100)}%`;
+        return { ...c2, width };
       });
       return { ...c, columns };
     }
-    return { ...c, width: widths[c.key] };
+    const width = `${Math.round((widths[c.key] / totalWidth) * 100)}%`;
+    return { ...c, width };
   });
 }
