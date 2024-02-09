@@ -14,7 +14,8 @@ import { AbleTablePagination } from "./AbleTablePagination";
 import { AbleStyles } from "../types/AbleStyles";
 import { flattenColumns } from "../utilities/flattenColumns";
 import { SearchBox } from "./SearchBox";
-import { isColumnGroup } from "../utilities/isType";
+import { isColumnGroup, isFunction } from "../utilities/isType";
+import { AbleClasses } from "../types/AbleClasses";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -48,6 +49,18 @@ type AbleTableProps<T extends object> = {
    * - tableCell?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
    */
   styles?: AbleStyles<T>;
+  /**
+   * Classes applied to the individual elements of the table.
+   * - container?: string;
+   * - table?: string;
+   * - tableBody?: string;
+   * - tableHead?: string;
+   * - tableFoot?: string;
+   * - tableRow?: string | ((d?: T, i?: number) => string);
+   * - tableHeader?: string | ((c?: AbleColumn<T>, i?: number) => string);
+   * - tableCell?: string | ((c?: AbleColumn<T>, i?: number) => string);
+   */
+  classes?: AbleClasses<T>;
 };
 
 export function AbleTable<T extends object>({
@@ -56,6 +69,7 @@ export function AbleTable<T extends object>({
   tableActions,
   options,
   styles,
+  classes,
   ...props
 }: AbleTableProps<T>) {
   const data = useMemo(() => props.data.map((d, i) => ({ ...d, key: `${i}` })), [props.data]);
@@ -97,7 +111,10 @@ export function AbleTable<T extends object>({
   const visibleData = paging ? sliceData(sortedData, currentPage, rowsPerPage) : sortedData;
 
   return (
-    <div style={{ zIndex: 1, width: "fit-content", ...styles?.container }}>
+    <div
+      className={`AbleTable-Container ${classes?.container}`}
+      style={{ zIndex: 1, width: "fit-content", ...styles?.container }}
+    >
       {(!!title || options?.searchable != false || !!tableActions?.length) && (
         <div
           style={{
@@ -107,7 +124,7 @@ export function AbleTable<T extends object>({
             padding: 10,
           }}
         >
-          <h2>{title}</h2>
+          {title}
           <div>
             {options?.searchable != false && <SearchBox onChange={handleSearch} />}
             {tableActions?.map((a, i) => (
@@ -118,21 +135,22 @@ export function AbleTable<T extends object>({
           </div>
         </div>
       )}
-      <table style={styles?.table}>
+      <table className={`AbleTable-Table ${classes?.table}`} style={styles?.table}>
         <AbleTableHead
           ref={(r) => (columnRef.current[r?.id ?? "null"] = r?.clientWidth ?? 0)}
           columns={columns}
           sort={sort}
           options={options}
           styles={styles}
+          classes={classes}
           onUpdateSort={handleSort}
         />
         <AbleTableBody
           data={visibleData}
           columns={columns}
-          onRowClick={onRowClick}
-          options={options}
           styles={styles}
+          classes={classes}
+          onRowClick={onRowClick}
         />
       </table>
       {paging && (
@@ -173,7 +191,7 @@ function standardSearch<T extends object>(
   const cellData =
     "field" in column
       ? getField(datum, column.field)
-      : typeof column.render == "function"
+      : isFunction(column.render)
       ? column.render(datum)
       : column.render;
   return cellData?.toString().toLowerCase().includes(filter.toLowerCase());
