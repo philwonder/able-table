@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useRef, useMemo } from "react";
+import React, { ReactNode, useState, useRef, useMemo, useLayoutEffect } from "react";
 import { AbleAction } from "../types/AbleAction";
 import {
   AbleColumn,
@@ -14,7 +14,8 @@ import { AbleTablePagination } from "./AbleTablePagination";
 import { AbleStyles } from "../types/AbleStyles";
 import { flattenColumns } from "../utilities/flattenColumns";
 import { SearchBox } from "./SearchBox";
-import { isColumnGroup } from "../utilities/isType";
+import { isColumnGroup, isFunction } from "../utilities/isType";
+import { AbleClasses } from "../types/AbleClasses";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -48,6 +49,18 @@ type AbleTableProps<T extends object> = {
    * - tableCell?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
    */
   styles?: AbleStyles<T>;
+  /**
+   * Classes applied to the individual elements of the table.
+   * - container?: string;
+   * - table?: string;
+   * - tableBody?: string;
+   * - tableHead?: string;
+   * - tableFoot?: string;
+   * - tableRow?: string | ((d?: T, i?: number) => string);
+   * - tableHeader?: string | ((c?: AbleColumn<T>, i?: number) => string);
+   * - tableCell?: string | ((c?: AbleColumn<T>, i?: number) => string);
+   */
+  classes?: AbleClasses<T>;
 };
 
 export function AbleTable<T extends object>({
@@ -56,10 +69,11 @@ export function AbleTable<T extends object>({
   tableActions,
   options,
   styles,
+  classes,
   ...props
 }: AbleTableProps<T>) {
   const data = useMemo(() => props.data.map((d, i) => ({ ...d, key: `${i}` })), [props.data]);
-  const columns = useMemo(() => mapKeyedColumns(props.columns), [props.columns]);
+  const [columns, setColumns] = useState(() => mapKeyedColumns(props.columns));
 
   const pageSizeOptions = useRef(
     options?.pageSizeOptions ??
@@ -68,11 +82,18 @@ export function AbleTable<T extends object>({
         .concat(options?.pageSize ? [options.pageSize] : [])
         .sort((a, b) => a - b)
   ).current;
+  const [paging, setPaging] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(options?.pageSize || pageSizeOptions[0]);
 
   const [sort, setSort] = useState<{ col?: KeyedColumn<T>; desc: boolean }>({ desc: false });
   const [sortedData, setSortedData] = useState<(T & { key: string })[]>(data);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(options?.pageSize || pageSizeOptions[0]);
+
+  const columnRef = useRef<Record<string, number>>({});
+  useLayoutEffect(() => {
+    setColumns(mapWidthColumns(columns, columnRef.current));
+    setPaging(!!options?.paging);
+  }, []);
 
   const handleSearch = (filter: string) => {
     const filtered = filterData(data, columns, filter);
@@ -87,12 +108,13 @@ export function AbleTable<T extends object>({
     setSort(newSort);
   };
 
-  const visibleData = !!options?.paging
-    ? sliceData(sortedData, currentPage, rowsPerPage)
-    : sortedData;
+  const visibleData = paging ? sliceData(sortedData, currentPage, rowsPerPage) : sortedData;
 
   return (
-    <div style={{ zIndex: 1, width: "fit-content", ...styles?.container }}>
+    <div
+      className={`AbleTable-Container ${classes?.container}`}
+      style={{ zIndex: 1, width: "fit-content", ...styles?.container }}
+    >
       {(!!title || options?.searchable != false || !!tableActions?.length) && (
         <div
           style={{
@@ -102,7 +124,7 @@ export function AbleTable<T extends object>({
             padding: 10,
           }}
         >
-          <h2>{title}</h2>
+          {title}
           <div>
             {options?.searchable != false && <SearchBox onChange={handleSearch} />}
             {tableActions?.map((a, i) => (
@@ -113,33 +135,37 @@ export function AbleTable<T extends object>({
           </div>
         </div>
       )}
-      <table style={styles?.table}>
+      <table className={`AbleTable-Table ${classes?.table}`} style={styles?.table}>
         <AbleTableHead
+          ref={(r) => (columnRef.current[r?.id ?? "null"] = r?.clientWidth ?? 0)}
           columns={columns}
           sort={sort}
           options={options}
           styles={styles}
+          classes={classes}
           onUpdateSort={handleSort}
         />
         <AbleTableBody
           data={visibleData}
           columns={columns}
-          onRowClick={onRowClick}
-          options={options}
           styles={styles}
+          classes={classes}
+          onRowClick={onRowClick}
         />
       </table>
-      <AbleTablePagination
-        rowsPerPage={rowsPerPage}
-        pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
-        currentPage={currentPage}
-        isLastPage={sortedData.length < rowsPerPage}
-        updateCurrentPage={setCurrentPage}
-        updateRowsPerPage={(rows) => {
-          setRowsPerPage(rows);
-          setCurrentPage(0);
-        }}
-      />
+      {paging && (
+        <AbleTablePagination
+          rowsPerPage={rowsPerPage}
+          pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
+          currentPage={currentPage}
+          isLastPage={sortedData.length < rowsPerPage}
+          updateCurrentPage={setCurrentPage}
+          updateRowsPerPage={(rows) => {
+            setRowsPerPage(rows);
+            setCurrentPage(0);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -165,7 +191,7 @@ function standardSearch<T extends object>(
   const cellData =
     "field" in column
       ? getField(datum, column.field)
-      : typeof column.render == "function"
+      : isFunction(column.render)
       ? column.render(datum)
       : column.render;
   return cellData?.toString().toLowerCase().includes(filter.toLowerCase());
@@ -222,13 +248,16 @@ function mapWidthColumns<T extends object>(
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
   widths: Record<string, number>
 ): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
+  const totalWidth = Object.values(widths).reduce((a, b) => a + b);
   return columns.map((c) => {
     if (isColumnGroup(c)) {
       const columns = c.columns.map((c2) => {
-        return { ...c2, width: widths[c2.key] };
+        const width = `${Math.round((widths[c2.key] / totalWidth) * 100)}%`;
+        return { ...c2, width };
       });
       return { ...c, columns };
     }
-    return { ...c, width: widths[c.key] };
+    const width = `${Math.round((widths[c.key] / totalWidth) * 100)}%`;
+    return { ...c, width };
   });
 }

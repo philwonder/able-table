@@ -1,26 +1,23 @@
 import { memo } from "react";
 import { KeyedColumn } from "../types/AbleColumn";
+import { AbleOptions } from "../types/AbleOptions";
 import { getField } from "../utilities/nestedFieldHelpers";
 import { AbleStyles } from "../types/AbleStyles";
 import React from "react";
-import { AbleClasses } from "../types/AbleClasses";
-import { isFunction } from "../utilities/isType";
 
-type AbleTableCellProps<T extends object> = {
+type AbleTableHeaderProps<T extends object> = {
   data: T & { key: string | number };
   column: KeyedColumn<T>;
   index: number;
   styles: AbleStyles<T> | undefined;
-  classes: AbleClasses<T> | undefined;
 };
 
-export function AbleTableCellComponent<T extends object>({
+export function AbleTableHeaderComponent<T extends object>({
   data,
   column,
   index,
   styles,
-  classes,
-}: AbleTableCellProps<T>) {
+}: AbleTableHeaderProps<T>) {
   return (
     <td
       onClick={(e) => {
@@ -28,20 +25,19 @@ export function AbleTableCellComponent<T extends object>({
         e.stopPropagation();
         column.onClick(data);
       }}
-      className={`AbleTable-Cell ${
-        isFunction(classes?.tableCell) ? classes.tableCell(column, index) : classes?.tableCell
-      }`}
       style={{
         textWrap: "nowrap",
         ...(column.onClick && { cursor: "pointer" }),
         ...(column.sticky && { position: "sticky", left: 0, zIndex: 11 }),
-        ...(isFunction(styles?.tableCell)
+        ...(typeof styles?.tableCell == "function"
           ? styles?.tableCell(column, index)
           : styles?.tableCell),
-        ...(isFunction(column.cellStyle) ? column.cellStyle(column, index) : column.cellStyle),
+        ...(typeof column.cellStyle == "function"
+          ? column.cellStyle(column, index)
+          : column.cellStyle),
       }}
     >
-      {isFunction(column.render)
+      {typeof column.render == "function"
         ? column.render(data)
         : column.render
         ? column.render
@@ -52,4 +48,6 @@ export function AbleTableCellComponent<T extends object>({
   );
 }
 
-export const AbleTableCell = memo(AbleTableCellComponent) as typeof AbleTableCellComponent;
+export const AbleTableHeader = memo(
+  AbleTableHeaderComponent
+) as typeof AbleTableHeaderComponent;

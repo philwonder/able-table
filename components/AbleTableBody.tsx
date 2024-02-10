@@ -1,28 +1,29 @@
 import React from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
-import { AbleOptions } from "../types/AbleOptions";
 import { AbleStyles } from "../types/AbleStyles";
 import { AbleTableCell } from "./AbleTableCell";
 import { flattenColumns } from "../utilities/flattenColumns";
+import { AbleClasses } from "../types/AbleClasses";
+import { isFunction } from "../utilities/isType";
 
 type AbleTableBodyProps<T extends object> = {
   data: (T & { key: string | number })[];
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
   onRowClick: ((d: T) => void) | undefined;
-  options: AbleOptions | undefined;
   styles: AbleStyles<T> | undefined;
+  classes: AbleClasses<T> | undefined;
 };
 
 export function AbleTableBody<T extends object>({
   data,
   columns,
   onRowClick,
-  options,
   styles,
+  classes,
 }: AbleTableBodyProps<T>) {
   const flatColumns = flattenColumns(columns);
   return (
-    <tbody>
+    <tbody style={styles?.tableBody} className={`AbleTable-Body ${classes?.tableBody}`}>
       {!!data.length ? (
         data.map((d, i) => (
           <tr
@@ -32,19 +33,20 @@ export function AbleTableBody<T extends object>({
               e.stopPropagation();
               onRowClick(d);
             }}
+            className={`AbleTable-Row ${
+              isFunction(classes?.tableRow) ? classes.tableRow(d, i) : classes?.tableRow
+            }`}
             style={{
               height: 35,
               ...(onRowClick && { cursor: "pointer" }),
-              ...(typeof styles?.tableRow == "function"
-                ? styles?.tableRow(d, i)
-                : styles?.tableRow),
+              ...(isFunction(styles?.tableRow) ? styles?.tableRow(d, i) : styles?.tableRow),
             }}
           >
             {flatColumns.map((c, j) => (
               <AbleTableCell
                 key={`${d.key}${c.key}`}
-                options={options}
                 styles={styles}
+                classes={classes}
                 data={d}
                 column={c}
                 index={j}
