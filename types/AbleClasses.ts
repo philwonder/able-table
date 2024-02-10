@@ -35,4 +35,8 @@ export type AbleClasses<T extends object> = {
    * Overridden by column cellClasses prop.
    */
   tableCell?: string | ((c?: AbleColumn<T>, i?: number) => string);
+  /**
+   * Classes applied to the search box.
+   */
+  searchBox?: string | ((value: string) => string);
 };

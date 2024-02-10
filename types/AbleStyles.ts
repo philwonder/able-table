@@ -36,4 +36,8 @@ export type AbleStyles<T extends object> = {
    * Overridden by column cellStyle prop.
    */
   tableCell?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
+  /**
+   * Styles applied to the search box.
+   */
+  searchBox?: CSSProperties | ((value: string) => CSSProperties);
 };
