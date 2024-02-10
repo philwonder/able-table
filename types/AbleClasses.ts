@@ -22,7 +22,7 @@ export type AbleClasses<T extends object> = {
    */
   tableFoot?: string;
   /**
-   * Classes applied to the \<tr> elements.
+   * Classes applied to the \<tr> elements in \<tbody>.
    */
   tableRow?: string | ((d?: T, i?: number) => string);
   /**
