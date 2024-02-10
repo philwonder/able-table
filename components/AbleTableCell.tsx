@@ -29,7 +29,7 @@ export function AbleTableCellComponent<T extends object>({
         column.onClick(data);
       }}
       className={`AbleTable-Cell ${
-        isFunction(classes?.tableCell) ? classes.tableCell(column, index) : classes?.tableCell
+        isFunction(classes?.tableCell) ? classes?.tableCell(column, index) : classes?.tableCell
       }`}
       style={{
         textWrap: "nowrap",

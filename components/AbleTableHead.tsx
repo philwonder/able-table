@@ -28,13 +28,13 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
         id={c.key}
         key={`H${c.key}`}
         className={`AbleTable-Header ${
-          isFunction(classes?.tableHeader) ? classes.tableHeader(c, i) : classes?.tableHeader
+          isFunction(classes?.tableHeader) ? classes?.tableHeader(c, i) : classes?.tableHeader
         }`}
         style={{
           zIndex: 11,
           ...(c.sticky && { position: "sticky", left: 0, zIndex: 12 }),
           ...(isFunction(styles?.tableHeader)
-            ? styles.tableHeader(c, i)
+            ? styles?.tableHeader(c, i)
             : styles?.tableHeader),
           ...(isFunction(c.headerStyle) ? c.headerStyle(c, i) : c.headerStyle),
           width: c.width,

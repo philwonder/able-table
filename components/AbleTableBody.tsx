@@ -34,10 +34,9 @@ export function AbleTableBody<T extends object>({
               onRowClick(d);
             }}
             className={`AbleTable-Row ${
-              isFunction(classes?.tableRow) ? classes.tableRow(d, i) : classes?.tableRow
+              isFunction(classes?.tableRow) ? classes?.tableRow(d, i) : classes?.tableRow
             }`}
             style={{
-              height: 35,
               ...(onRowClick && { cursor: "pointer" }),
               ...(isFunction(styles?.tableRow) ? styles?.tableRow(d, i) : styles?.tableRow),
             }}
