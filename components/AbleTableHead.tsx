@@ -4,6 +4,7 @@ import { AbleOptions } from "../types/AbleOptions";
 import { AbleStyles } from "../types/AbleStyles";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
+import { SortableTableHeader } from "./SortableTableHeader";
 
 type AbleTableHeadProps<T extends object> = {
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
@@ -40,42 +41,7 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
         }}
       >
         {sortable ? (
-          <div
-            style={{
-              display: "inline-flex",
-              flexDirection: "column",
-              width: "fit-content",
-              maxWidth: "fit-content",
-              alignItems: "center",
-              cursor: "pointer",
-              margin: "6 0 6 0",
-            }}
-            onClick={() => onUpdateSort(c)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="24px"
-              viewBox="0 0 24 24"
-              width="24px"
-              fill="#000000"
-              style={{ margin: -3, opacity: sort.col == c && !sort.desc ? 1 : 0 }}
-            >
-              <path d="M0 0h24v24H0V0z" fill="none" />
-              <path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z" />
-            </svg>
-            {c.title}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              height="24px"
-              viewBox="0 0 24 24"
-              width="24px"
-              fill="#000000"
-              style={{ margin: -3, opacity: sort.col == c && sort.desc ? 1 : 0 }}
-            >
-              <path d="M24 24H0V0h24v24z" fill="none" opacity=".87" />
-              <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6-1.41-1.41z" />
-            </svg>
-          </div>
+          <SortableTableHeader column={c} sort={sort} onUpdateSort={onUpdateSort} />
         ) : (
           c.title
         )}
