@@ -40,4 +40,5 @@ export type AbleStyles<T extends object> = {
    * Styles applied to the search box.
    */
   searchBox?: CSSProperties | ((value: string) => CSSProperties);
+  pagination?: CSSProperties;
 };

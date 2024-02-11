@@ -39,4 +39,5 @@ export type AbleClasses<T extends object> = {
    * Classes applied to the search box.
    */
   searchBox?: string | ((value: string) => string);
+  pagination?: string;
 };

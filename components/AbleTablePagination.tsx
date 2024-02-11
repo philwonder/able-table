@@ -1,24 +1,28 @@
-import React from "react";
+import React, { CSSProperties } from "react";
 
 type AbleTablePaginationProps = {
-  rowsPerPage: number;
+  pageSize: number;
   pageSizeOptions: number[];
   currentPage: number;
-  isLastPage: boolean;
+  lastPage: number;
   updateCurrentPage: (page: number) => void;
-  updateRowsPerPage: (size: number) => void;
+  updatePageSize: (size: number) => void;
+  styles: CSSProperties | undefined;
+  classes: string | undefined;
 };
 
 export function AbleTablePagination({
-  rowsPerPage: pageSize,
+  pageSize,
   pageSizeOptions,
   currentPage,
-  isLastPage,
+  lastPage,
   updateCurrentPage,
-  updateRowsPerPage: updatePageSize,
+  updatePageSize,
+  styles,
+  classes,
 }: AbleTablePaginationProps) {
   return (
-    <div style={{ display: "flex" }}>
+    <div style={styles} className={`AbleTable-Pagination ${classes}`}>
       <label htmlFor="page-size">Page size:</label>
       <select
         id="page-size"
@@ -31,6 +35,7 @@ export function AbleTablePagination({
           </option>
         ))}
       </select>
+      <div>{`Page ${currentPage + 1} of ${lastPage}`}</div>
       <button disabled={!currentPage} onClick={() => updateCurrentPage(currentPage - 1)}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +48,10 @@ export function AbleTablePagination({
           <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z" />
         </svg>
       </button>
-      <button disabled={isLastPage} onClick={() => updateCurrentPage(currentPage + 1)}>
+      <button
+        disabled={currentPage + 1 == lastPage}
+        onClick={() => updateCurrentPage(currentPage + 1)}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           height="24px"

@@ -111,7 +111,7 @@ export function AbleTable<T extends object>({
     setSort(newSort);
   };
 
-  const visibleData = paging ? sliceData(sortedData, currentPage, rowsPerPage) : sortedData;
+  const visibleData = paging ? getPage(sortedData, currentPage, rowsPerPage) : sortedData;
 
   return (
     <div className={`AbleTable-Container ${classes?.container}`} style={styles?.container}>
@@ -149,15 +149,17 @@ export function AbleTable<T extends object>({
       </table>
       {paging && (
         <AbleTablePagination
-          rowsPerPage={rowsPerPage}
+          pageSize={rowsPerPage}
           pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
           currentPage={currentPage}
-          isLastPage={sortedData.length < rowsPerPage}
+          lastPage={Math.ceil(sortedData.length / rowsPerPage)}
           updateCurrentPage={setCurrentPage}
-          updateRowsPerPage={(rows) => {
+          updatePageSize={(rows) => {
             setRowsPerPage(rows);
             setCurrentPage(0);
           }}
+          styles={styles?.pagination}
+          classes={classes?.pagination}
         />
       )}
     </div>
@@ -220,7 +222,7 @@ function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
   };
 }
 
-function sliceData<T extends object>(data: T[], page: number, rowsPerPage: number) {
+function getPage<T extends object>(data: T[], page: number, rowsPerPage: number) {
   return data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 }
 
