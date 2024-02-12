@@ -44,6 +44,10 @@ export type AbleColumn<T extends object> = {
    * @default false
    */
   sticky?: boolean;
+  /**
+   * A ReactNode or function that returns one.
+   */
+  footerRender?: ReactNode | ((d: T[]) => ReactNode);
 } & (
   | {
       /**

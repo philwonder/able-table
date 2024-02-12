@@ -16,6 +16,7 @@ import { flattenColumns } from "../utilities/flattenColumns";
 import { SearchBox } from "./SearchBox";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
+import { AbleTableFoot } from "./AbleTableFoot";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -146,6 +147,7 @@ export function AbleTable<T extends object>({
           classes={classes}
           onRowClick={onRowClick}
         />
+        <AbleTableFoot data={sortedData} columns={columns} styles={styles} classes={classes} />
       </table>
       {paging && (
         <AbleTablePagination
