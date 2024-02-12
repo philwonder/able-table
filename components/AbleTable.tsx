@@ -66,13 +66,16 @@ type AbleTableProps<T extends object> = {
 export function AbleTable<T extends object>({
   title,
   onRowClick,
-  tableActions,
   options,
   styles,
   classes,
   ...props
 }: AbleTableProps<T>) {
   const data = useMemo(() => props.data.map((d, i) => ({ ...d, key: `${i}` })), [props.data]);
+  const tableActions = useMemo(
+    () => props.tableActions?.map((a, i) => ({ ...a, key: `${i}` })),
+    [props.tableActions]
+  );
   const [columns, setColumns] = useState(() => mapKeyedColumns(props.columns));
 
   const pageSizeOptions = useRef(
@@ -108,33 +111,24 @@ export function AbleTable<T extends object>({
     setSort(newSort);
   };
 
-  const visibleData = paging ? sliceData(sortedData, currentPage, rowsPerPage) : sortedData;
+  const visibleData = paging ? getPage(sortedData, currentPage, rowsPerPage) : sortedData;
 
   return (
-    <div
-      className={`AbleTable-Container ${classes?.container}`}
-      style={{ zIndex: 1, width: "fit-content", ...styles?.container }}
-    >
-      {(!!title || options?.searchable != false || !!tableActions?.length) && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: 10,
-          }}
-        >
-          {title}
-          <div>
-            {options?.searchable != false && <SearchBox onChange={handleSearch} />}
-            {tableActions?.map((a, i) => (
-              <button onClick={a.onClick} disabled={a.disabled}>
-                {a.render}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className={`AbleTable-Container ${classes?.container}`} style={styles?.container}>
+      {title}
+      {options?.searchable != false && (
+        <SearchBox
+          onChange={handleSearch}
+          styles={styles?.searchBox}
+          classes={classes?.searchBox}
+        />
       )}
+      {!!tableActions?.length &&
+        tableActions?.map((a, i) => (
+          <button key={a.key} onClick={a.onClick} disabled={a.disabled}>
+            {a.render}
+          </button>
+        ))}
       <table className={`AbleTable-Table ${classes?.table}`} style={styles?.table}>
         <AbleTableHead
           ref={(r) => (columnRef.current[r?.id ?? "null"] = r?.clientWidth ?? 0)}
@@ -155,15 +149,17 @@ export function AbleTable<T extends object>({
       </table>
       {paging && (
         <AbleTablePagination
-          rowsPerPage={rowsPerPage}
+          pageSize={rowsPerPage}
           pageSizeOptions={options?.pageSizeOptions ?? pageSizeOptions}
           currentPage={currentPage}
-          isLastPage={sortedData.length < rowsPerPage}
+          lastPage={Math.ceil(sortedData.length / rowsPerPage)}
           updateCurrentPage={setCurrentPage}
-          updateRowsPerPage={(rows) => {
+          updatePageSize={(rows) => {
             setRowsPerPage(rows);
             setCurrentPage(0);
           }}
+          styles={styles?.pagination}
+          classes={classes?.pagination}
         />
       )}
     </div>
@@ -226,7 +222,7 @@ function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
   };
 }
 
-function sliceData<T extends object>(data: T[], page: number, rowsPerPage: number) {
+function getPage<T extends object>(data: T[], page: number, rowsPerPage: number) {
   return data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 }
 

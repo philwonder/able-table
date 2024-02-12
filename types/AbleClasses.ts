@@ -22,7 +22,7 @@ export type AbleClasses<T extends object> = {
    */
   tableFoot?: string;
   /**
-   * Classes applied to the \<tr> elements.
+   * Classes applied to the \<tr> elements in \<tbody>.
    */
   tableRow?: string | ((d?: T, i?: number) => string);
   /**
@@ -35,4 +35,9 @@ export type AbleClasses<T extends object> = {
    * Overridden by column cellClasses prop.
    */
   tableCell?: string | ((c?: AbleColumn<T>, i?: number) => string);
+  /**
+   * Classes applied to the search box.
+   */
+  searchBox?: string | ((value: string) => string);
+  pagination?: string;
 };

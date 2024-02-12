@@ -1,8 +1,16 @@
-import { ReactNode } from "react";
+import { CSSProperties, ReactNode } from "react";
 
 export type AbleAction = {
+  /**
+   * A ReactNode which populates the action.
+   */
   render: ReactNode;
   onClick: () => void;
-  tooltip?: string;
+  // tooltip?: string; //not implemented yet
   disabled?: boolean;
+  /**
+   * Styles applied to the action.
+   * Overrides thes styles tableAction prop.
+   */
+  cellStyle?: CSSProperties;
 };

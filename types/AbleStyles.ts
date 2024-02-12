@@ -23,7 +23,7 @@ export type AbleStyles<T extends object> = {
    */
   tableFoot?: CSSProperties;
   /**
-   * Styles applied to the \<tr> elements.
+   * Styles applied to the \<tr> elements in \<tbody>.
    */
   tableRow?: CSSProperties | ((d?: T, i?: number) => CSSProperties);
   /**
@@ -36,4 +36,9 @@ export type AbleStyles<T extends object> = {
    * Overridden by column cellStyle prop.
    */
   tableCell?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
+  /**
+   * Styles applied to the search box.
+   */
+  searchBox?: CSSProperties | ((value: string) => CSSProperties);
+  pagination?: CSSProperties;
 };
