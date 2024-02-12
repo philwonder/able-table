@@ -2,7 +2,10 @@ import { ReactNode, CSSProperties } from "react";
 import { NestedKeyOf } from "./UtitlityTypes";
 
 export type AbleColumn<T extends object> = {
-  title?: ReactNode;
+  /**
+   * Required for a column to be sortable.
+   */
+  header?: ReactNode;
   /**
    * Styles applied to the column's \<td> elements.
    * Overrides thes styles tableCell prop.

@@ -21,7 +21,10 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
 ) {
   function renderHeaderCell(c: KeyedColumn<T>, i: number) {
     const sortable =
-      !(options?.sortable == false) && !(c.sortable == false) && ("field" in c || c.sort);
+      !(options?.sortable == false) &&
+      !(c.sortable == false) &&
+      !!c.header &&
+      ("field" in c || c.sort);
     return (
       <th
         ref={ref}
@@ -43,7 +46,7 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
         {sortable ? (
           <SortableTableHeader column={c} sort={sort} onUpdateSort={onUpdateSort} />
         ) : (
-          c.title
+          c.header
         )}
       </th>
     );
