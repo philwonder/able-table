@@ -44,8 +44,8 @@ export function AbleTableBody<T extends object>({
             {flatColumns.map((c, j) => (
               <AbleTableCell
                 key={`${d.key}${c.key}`}
-                styles={styles}
-                classes={classes}
+                styles={styles?.tableCell}
+                classes={classes?.tableCell}
                 data={d}
                 column={c}
                 index={j}

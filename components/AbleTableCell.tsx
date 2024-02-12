@@ -1,17 +1,15 @@
-import { memo } from "react";
-import { KeyedColumn } from "../types/AbleColumn";
+import { CSSProperties, memo } from "react";
+import { AbleColumn, KeyedColumn } from "../types/AbleColumn";
 import { getField } from "../utilities/nestedFieldHelpers";
-import { AbleStyles } from "../types/AbleStyles";
-import React from "react";
-import { AbleClasses } from "../types/AbleClasses";
 import { isFunction } from "../utilities/isType";
+import React from "react";
 
 type AbleTableCellProps<T extends object> = {
   data: T & { key: string | number };
   column: KeyedColumn<T>;
   index: number;
-  styles: AbleStyles<T> | undefined;
-  classes: AbleClasses<T> | undefined;
+  styles: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties) | undefined;
+  classes: string | ((c?: AbleColumn<T>, i?: number) => string) | undefined;
 };
 
 export function AbleTableCellComponent<T extends object>({
@@ -28,22 +26,18 @@ export function AbleTableCellComponent<T extends object>({
         e.stopPropagation();
         column.onClick(data);
       }}
-      className={`AbleTable-Cell ${
-        isFunction(classes?.tableCell) ? classes?.tableCell(column, index) : classes?.tableCell
-      }`}
+      className={`AbleTable-Cell ${isFunction(classes) ? classes(column, index) : classes}`}
       style={{
         textWrap: "nowrap",
         ...(column.onClick && { cursor: "pointer" }),
         ...(column.sticky && { position: "sticky", left: 0, zIndex: 11 }),
-        ...(isFunction(styles?.tableCell)
-          ? styles?.tableCell(column, index)
-          : styles?.tableCell),
+        ...(isFunction(styles) ? styles(column, index) : styles),
         ...(isFunction(column.cellStyle) ? column.cellStyle(column, index) : column.cellStyle),
       }}
     >
       {isFunction(column.render)
         ? column.render(data)
-        : column.render
+        : !!column.render
         ? column.render
         : "field" in column
         ? getField(data, column.field)?.toString()
