@@ -261,12 +261,14 @@ function mapWidthColumns<T extends object>(
   return columns.map((c) => {
     if (isColumnGroup(c)) {
       const columns = c.columns.map((c2) => {
-        const width = `${Math.round((widths[c2.key] / totalWidth) * 100)}%`;
-        return { ...c2, width };
+        const minWidth = widths[c2.key];
+        const width = `${Math.round((minWidth / totalWidth) * 100)}%`;
+        return { ...c2, width, minWidth };
       });
       return { ...c, columns };
     }
-    const width = `${Math.round((widths[c.key] / totalWidth) * 100)}%`;
-    return { ...c, width };
+    const minWidth = widths[c.key];
+    const width = `${Math.round((minWidth / totalWidth) * 100)}%`;
+    return { ...c, width, minWidth };
   });
 }

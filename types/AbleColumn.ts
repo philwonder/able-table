@@ -19,6 +19,7 @@ export type AbleColumn<T extends object> = {
   headerStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   // headerTip?: string; //not implemented yet
   width?: string | number;
+  minWidth?: string | number;
   /** A custom search function.
    * - If omitted, the search is against the field data or render value.
    */

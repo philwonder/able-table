@@ -41,6 +41,7 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
             : styles?.tableHeader),
           ...(isFunction(c.headerStyle) ? c.headerStyle(c, i) : c.headerStyle),
           width: c.width,
+          minWidth: c.minWidth,
         }}
       >
         {sortable ? (
