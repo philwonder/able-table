@@ -16,6 +16,7 @@ import { flattenColumns } from "../utilities/flattenColumns";
 import { SearchBox } from "./SearchBox";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
+import { AbleTableFoot } from "./AbleTableFoot";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -77,6 +78,10 @@ export function AbleTable<T extends object>({
     [props.tableActions]
   );
   const [columns, setColumns] = useState(() => mapKeyedColumns(props.columns));
+  const displayFooter = useMemo(
+    () => flattenColumns(columns).some((c) => !!c.footerRender),
+    [columns]
+  );
 
   const pageSizeOptions = useRef(
     options?.pageSizeOptions ??
@@ -146,6 +151,14 @@ export function AbleTable<T extends object>({
           classes={classes}
           onRowClick={onRowClick}
         />
+        {displayFooter && (
+          <AbleTableFoot
+            data={sortedData}
+            columns={columns}
+            styles={styles}
+            classes={classes}
+          />
+        )}
       </table>
       {paging && (
         <AbleTablePagination
@@ -248,12 +261,14 @@ function mapWidthColumns<T extends object>(
   return columns.map((c) => {
     if (isColumnGroup(c)) {
       const columns = c.columns.map((c2) => {
-        const width = `${Math.round((widths[c2.key] / totalWidth) * 100)}%`;
-        return { ...c2, width };
+        const minWidth = widths[c2.key];
+        const width = `${Math.round((minWidth / totalWidth) * 100)}%`;
+        return { ...c2, width, minWidth };
       });
       return { ...c, columns };
     }
-    const width = `${Math.round((widths[c.key] / totalWidth) * 100)}%`;
-    return { ...c, width };
+    const minWidth = widths[c.key];
+    const width = `${Math.round((minWidth / totalWidth) * 100)}%`;
+    return { ...c, width, minWidth };
   });
 }

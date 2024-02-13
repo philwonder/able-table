@@ -2,7 +2,10 @@ import { ReactNode, CSSProperties } from "react";
 import { NestedKeyOf } from "./UtitlityTypes";
 
 export type AbleColumn<T extends object> = {
-  title?: ReactNode;
+  /**
+   * Required for a column to be sortable.
+   */
+  header?: ReactNode;
   /**
    * Styles applied to the column's \<td> elements.
    * Overrides thes styles tableCell prop.
@@ -16,6 +19,7 @@ export type AbleColumn<T extends object> = {
   headerStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   // headerTip?: string; //not implemented yet
   width?: string | number;
+  minWidth?: string | number;
   /** A custom search function.
    * - If omitted, the search is against the field data or render value.
    */
@@ -41,6 +45,10 @@ export type AbleColumn<T extends object> = {
    * @default false
    */
   sticky?: boolean;
+  /**
+   * A ReactNode or function that returns one.
+   */
+  footerRender?: ReactNode | ((d: T[]) => ReactNode);
 } & (
   | {
       /**
