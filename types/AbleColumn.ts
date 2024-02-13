@@ -46,6 +46,11 @@ export type AbleColumn<T extends object> = {
    */
   sticky?: boolean;
   /**
+   * Designates this column as a header.
+   * - All cells will be /<th> elements.
+   */
+  isHeader?: boolean;
+  /**
    * A ReactNode or function that returns one.
    */
   footerRender?: ReactNode | ((d: T[]) => ReactNode);

@@ -5,6 +5,7 @@ import { AbleTableCell } from "./AbleTableCell";
 import { flattenColumns } from "../utilities/flattenColumns";
 import { AbleClasses } from "../types/AbleClasses";
 import { isFunction } from "../utilities/isType";
+import { AbleTableHeader } from "./AbleTableHeader";
 
 type AbleTableBodyProps<T extends object> = {
   data: (T & { key: string | number })[];
@@ -41,16 +42,27 @@ export function AbleTableBody<T extends object>({
               ...(isFunction(styles?.tableRow) ? styles?.tableRow(d, i) : styles?.tableRow),
             }}
           >
-            {flatColumns.map((c, j) => (
-              <AbleTableCell
-                key={`${d.key}${c.key}`}
-                styles={styles?.tableCell}
-                classes={classes?.tableCell}
-                data={d}
-                column={c}
-                index={j}
-              />
-            ))}
+            {flatColumns.map((c, j) =>
+              c.isHeader ? (
+                <AbleTableHeader
+                  key={`${d.key}${c.key}`}
+                  styles={styles?.tableHeader}
+                  classes={classes?.tableHeader}
+                  data={d}
+                  column={c}
+                  index={j}
+                />
+              ) : (
+                <AbleTableCell
+                  key={`${d.key}${c.key}`}
+                  styles={styles?.tableCell}
+                  classes={classes?.tableCell}
+                  data={d}
+                  column={c}
+                  index={j}
+                />
+              )
+            )}
           </tr>
         ))
       ) : (
