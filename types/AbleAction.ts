@@ -10,7 +10,7 @@ export type AbleAction = {
   disabled?: boolean;
   /**
    * Styles applied to the action.
-   * Overrides thes styles tableAction prop.
+   * Overrides the styles tableAction prop.
    */
   cellStyle?: CSSProperties;
 };

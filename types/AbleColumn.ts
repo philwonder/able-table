@@ -8,13 +8,13 @@ export type AbleColumn<T extends object> = {
   header?: ReactNode;
   /**
    * Styles applied to the column's \<td> elements.
-   * Overrides thes styles tableCell prop.
+   * - Overrides the styles.tableCell prop.
    */
   cellStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   // cellTip?: (d: T) => string; //not implemented yet
   /**
    * Styles applied to the column's \<th> elements.
-   * Overrides thes styles tableHeader prop.
+   * - Overrides the styles.tableHeader prop.
    */
   headerStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   // headerTip?: string; //not implemented yet
@@ -82,12 +82,12 @@ export type AbleColumnGroup<T extends object> = {
   /**
    * The header for the column group
    */
-  groupHeader: ReactNode;
+  header?: ReactNode;
   /**
    * Styles applied to the groupHeader cell
    * Overrides thes styles tableHeader prop.
    */
-  groupHeaderStyle?: CSSProperties;
+  headerStyle?: CSSProperties;
   // groupHeaderTip?: string; //not implemented yet.
   /**
    * @default false

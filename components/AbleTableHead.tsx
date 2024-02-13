@@ -76,11 +76,11 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
                   ...(isFunction(styles?.tableHeader)
                     ? styles?.tableHeader(undefined, i)
                     : styles?.tableHeader),
-                  ...c.groupHeaderStyle,
+                  ...c.headerStyle,
                 }}
                 colSpan={c.columns.length}
               >
-                {c.groupHeader}
+                {c.header}
               </th>
             ) : (
               <th
