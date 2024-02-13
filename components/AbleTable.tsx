@@ -22,6 +22,7 @@ type AbleTableProps<T extends object> = {
   data: T[];
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
   title?: ReactNode;
+  caption?: string;
   onRowClick?: (d: T) => void;
   /**
    * Custom actions that are not row specific.
@@ -65,7 +66,6 @@ type AbleTableProps<T extends object> = {
 };
 
 export function AbleTable<T extends object>({
-  title,
   onRowClick,
   options,
   styles,
@@ -120,7 +120,7 @@ export function AbleTable<T extends object>({
 
   return (
     <div className={`AbleTable-Container ${classes?.container}`} style={styles?.container}>
-      {title}
+      {props.title}
       {options?.searchable != false && (
         <SearchBox
           onChange={handleSearch}
@@ -135,6 +135,7 @@ export function AbleTable<T extends object>({
           </button>
         ))}
       <table className={`AbleTable-Table ${classes?.table}`} style={styles?.table}>
+        {!!props.caption && <caption>{props.caption}</caption>}
         <AbleTableHead
           ref={(r) => (columnRef.current[r?.id ?? "null"] = r?.clientWidth ?? 0)}
           columns={columns}
