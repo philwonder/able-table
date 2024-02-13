@@ -12,6 +12,9 @@ type AbleTableHeaderProps<T extends object> = {
   classes: string | ((c?: AbleColumn<T>, i?: number) => string) | undefined;
 };
 
+/**
+ * Row Header Component
+ */
 export function AbleTableHeaderComponent<T extends object>({
   data,
   column,
@@ -21,6 +24,7 @@ export function AbleTableHeaderComponent<T extends object>({
 }: AbleTableHeaderProps<T>) {
   return (
     <th
+      scope="row"
       onClick={(e) => {
         if (!column.onClick) return;
         e.stopPropagation();
@@ -49,6 +53,9 @@ export function AbleTableHeaderComponent<T extends object>({
   );
 }
 
+/**
+ * Row Header Component
+ */
 export const AbleTableHeader = memo(
   AbleTableHeaderComponent
 ) as typeof AbleTableHeaderComponent;

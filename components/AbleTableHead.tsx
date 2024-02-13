@@ -27,6 +27,7 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
       ("field" in c || c.sort);
     return (
       <th
+        scope="col"
         ref={ref}
         id={c.key}
         key={`H${c.key}`}
@@ -63,6 +64,7 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
           {visibleColumns.map((c, i) =>
             isColumnGroup(c) ? (
               <th
+                scope="colgroup"
                 key={`${c.key}`}
                 className={`AbleTable-Header ${
                   isFunction(classes?.tableHeader)
