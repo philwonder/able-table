@@ -4,7 +4,7 @@ import { getField } from "../utilities/nestedFieldHelpers";
 import { isFunction } from "../utilities/isType";
 import React from "react";
 
-type AbleTableCellProps<T extends object> = {
+type AbleTableHeaderProps<T extends object> = {
   data: T & { key: string | number };
   column: KeyedColumn<T>;
   index: number;
@@ -12,15 +12,19 @@ type AbleTableCellProps<T extends object> = {
   classes: string | ((c?: AbleColumn<T>, i?: number) => string) | undefined;
 };
 
-export function AbleTableCellComponent<T extends object>({
+/**
+ * Row Header Component
+ */
+export function AbleTableHeaderComponent<T extends object>({
   data,
   column,
   index,
   styles,
   classes,
-}: AbleTableCellProps<T>) {
+}: AbleTableHeaderProps<T>) {
   return (
-    <td
+    <th
+      scope="row"
       onClick={(e) => {
         if (!column.onClick) return;
         e.stopPropagation();
@@ -29,11 +33,14 @@ export function AbleTableCellComponent<T extends object>({
       className={`AbleTable-Cell ${isFunction(classes) ? classes(column, index) : classes}`}
       style={{
         textWrap: "nowrap",
+        zIndex: 10,
         ...(column.onClick && { cursor: "pointer" }),
         ...(column.sticky && { position: "sticky", left: 0, zIndex: 11 }),
         ...(isFunction(styles) ? styles(column, index) : styles),
-        ...column.groupCellStyle,
-        ...(isFunction(column.cellStyle) ? column.cellStyle(column, index) : column.cellStyle),
+        ...column.groupHeaderStyle,
+        ...(isFunction(column.headerStyle)
+          ? column.headerStyle(column, index)
+          : column.headerStyle),
       }}
     >
       {isFunction(column.render)
@@ -43,8 +50,13 @@ export function AbleTableCellComponent<T extends object>({
         : "field" in column
         ? getField(data, column.field)?.toString()
         : ""}
-    </td>
+    </th>
   );
 }
 
-export const AbleTableCell = memo(AbleTableCellComponent) as typeof AbleTableCellComponent;
+/**
+ * Row Header Component
+ */
+export const AbleTableHeader = memo(
+  AbleTableHeaderComponent
+) as typeof AbleTableHeaderComponent;
