@@ -32,6 +32,7 @@ export function AbleTableCellComponent<T extends object>({
         ...(column.onClick && { cursor: "pointer" }),
         ...(column.sticky && { position: "sticky", left: 0, zIndex: 11 }),
         ...(isFunction(styles) ? styles(column, index) : styles),
+        ...column.groupCellStyle,
         ...(isFunction(column.cellStyle) ? column.cellStyle(column, index) : column.cellStyle),
       }}
     >

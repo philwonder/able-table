@@ -37,6 +37,7 @@ export function AbleTableHeaderComponent<T extends object>({
         ...(column.onClick && { cursor: "pointer" }),
         ...(column.sticky && { position: "sticky", left: 0, zIndex: 11 }),
         ...(isFunction(styles) ? styles(column, index) : styles),
+        ...column.groupHeaderStyle,
         ...(isFunction(column.headerStyle)
           ? column.headerStyle(column, index)
           : column.headerStyle),

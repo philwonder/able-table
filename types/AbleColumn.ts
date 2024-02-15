@@ -9,12 +9,14 @@ export type AbleColumn<T extends object> = {
   /**
    * Styles applied to the column's \<td> elements.
    * - Overrides the styles.tableCell prop.
+   * - Overrides the column group's cellStyle prop.
    */
   cellStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   // cellTip?: (d: T) => string; //not implemented yet
   /**
    * Styles applied to the column's \<th> elements.
    * - Overrides the styles.tableHeader prop.
+   * - Overrides the column group's headerStyle prop.
    */
   headerStyle?: CSSProperties | ((c?: AbleColumn<T>, i?: number) => CSSProperties);
   // headerTip?: string; //not implemented yet
@@ -84,10 +86,17 @@ export type AbleColumnGroup<T extends object> = {
    */
   header?: ReactNode;
   /**
-   * Styles applied to the groupHeader cell
-   * Overrides thes styles tableHeader prop.
+   * Styles applied to the column group's \<th> elements
+   * - Overrides the styles tableHeader prop.
+   * - Overriden by the headerStyle prop of child columns.
    */
   headerStyle?: CSSProperties;
+  /**
+   * Styles applied to the column's \<td> elements.
+   * - Overrides the styles.tableCell prop.
+   * - Overriden by the cellStyle prop of child columns.
+   */
+  cellStyle?: CSSProperties;
   // groupHeaderTip?: string; //not implemented yet.
   /**
    * @default false
@@ -97,7 +106,12 @@ export type AbleColumnGroup<T extends object> = {
   columns: AbleColumn<T>[];
 };
 
-export type KeyedColumn<T extends object> = AbleColumn<T> & { key: string };
+export type KeyedColumn<T extends object> = AbleColumn<T> & {
+  key: string;
+  groupHeaderStyle?: CSSProperties;
+  groupCellStyle?: CSSProperties;
+};
+
 export type KeyedColumnGroup<T extends object> = Omit<AbleColumnGroup<T>, "columns"> & {
   key: string;
   columns: KeyedColumn<T>[];
