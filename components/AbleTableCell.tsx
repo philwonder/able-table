@@ -36,13 +36,13 @@ export function AbleTableCellComponent<T extends object>({
         ...(isFunction(column.cellStyle) ? column.cellStyle(column, index) : column.cellStyle),
       }}
     >
-      {isFunction(column.render)
+      {!column.render
+        ? "field" in column
+          ? getField(data, column.field)?.toString()
+          : ""
+        : isFunction(column.render)
         ? column.render(data)
-        : !!column.render
-        ? column.render
-        : "field" in column
-        ? getField(data, column.field)?.toString()
-        : ""}
+        : column.render}
     </td>
   );
 }

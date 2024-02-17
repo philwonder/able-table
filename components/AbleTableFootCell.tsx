@@ -30,11 +30,11 @@ export function AbleTableFootCellComponent<T extends object>({
         ...(isFunction(column.cellStyle) ? column.cellStyle(column, index) : column.cellStyle),
       }}
     >
-      {isFunction(column.footerRender)
+      {!column.footerRender
+        ? ""
+        : isFunction(column.footerRender)
         ? column.footerRender(data)
-        : !!column.footerRender
-        ? column.footerRender
-        : ""}
+        : column.footerRender}
     </td>
   );
 }
