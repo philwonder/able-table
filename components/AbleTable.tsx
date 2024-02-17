@@ -78,10 +78,6 @@ export function AbleTable<T extends object>({
     [props.tableActions]
   );
   const [columns, setColumns] = useState(() => mapKeyedColumns(props.columns));
-  const displayFooter = useMemo(
-    () => flattenColumns(columns).some((c) => !!c.footerRender),
-    [columns]
-  );
 
   const pageSizeOptions = useRef(
     options?.pageSizeOptions ??
@@ -152,14 +148,7 @@ export function AbleTable<T extends object>({
           classes={classes}
           onRowClick={onRowClick}
         />
-        {displayFooter && (
-          <AbleTableFoot
-            data={sortedData}
-            columns={columns}
-            styles={styles}
-            classes={classes}
-          />
-        )}
+        <AbleTableFoot data={sortedData} columns={columns} styles={styles} classes={classes} />
       </table>
       {paging && (
         <AbleTablePagination
