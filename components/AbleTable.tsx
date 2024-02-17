@@ -96,7 +96,7 @@ export function AbleTable<T extends object>({
   const columnRef = useRef<Record<string, number>>({});
   useLayoutEffect(() => {
     setColumns(mapWidthColumns(columns, columnRef.current));
-    setPaging(!!options?.paging);
+    setPaging(!!options?.paging || !!options?.pageSize || !!options?.pageSizeOptions);
   }, []);
 
   const handleSearch = (filter: string) => {
