@@ -15,10 +15,14 @@ type AbleTableHeadProps<T extends object> = {
   classes: AbleClasses<T> | undefined;
 };
 
-export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extends object>(
-  { columns, sort, onUpdateSort, options, styles, classes }: AbleTableHeadProps<T>,
-  ref: ForwardedRef<HTMLTableCellElement>
-) {
+export function AbleTableHead<T extends object>({
+  columns,
+  sort,
+  onUpdateSort,
+  options,
+  styles,
+  classes,
+}: AbleTableHeadProps<T>) {
   function renderHeaderCell(c: KeyedColumn<T>, i: number) {
     const sortable =
       !(options?.sortable == false) &&
@@ -28,7 +32,6 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
     return (
       <th
         scope="col"
-        ref={ref}
         id={c.key}
         key={`H${c.key}`}
         className={`AbleTable-Header ${
@@ -110,7 +113,4 @@ export const AbleTableHead = forwardRef(function AbleTableHeadComponent<T extend
       </tr>
     </thead>
   );
-}) as (<T extends object>(
-  props: AbleTableHeadProps<T> & { ref?: ForwardedRef<HTMLTableCellElement> }
-) => JSX.Element) &
-  ForwardRefExoticComponent<AbleTableHeadProps<object>>;
+}

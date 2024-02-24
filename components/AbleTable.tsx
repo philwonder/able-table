@@ -72,15 +72,17 @@ export function AbleTable<T extends object>({
   classes,
   ...props
 }: AbleTableProps<T>) {
-  const data = useMemo(() => props.data.map((d, i) => ({ ...d, key: `${i}` })), [props.data]);
+  const columns = useMemo(
+    () => mapKeyedColumns(props.columns),
+    [props.columns, props.columns.length]
+  );
+  const data = useMemo(
+    () => props.data.map((d, i) => ({ ...d, key: `${i}` })),
+    [props.data, props.data.length]
+  );
   const tableActions = useMemo(
     () => props.tableActions?.map((a, i) => ({ ...a, key: `${i}` })),
-    [props.tableActions]
-  );
-  const [columns, setColumns] = useState(() => mapKeyedColumns(props.columns));
-  const displayFooter = useMemo(
-    () => flattenColumns(columns).some((c) => !!c.footerRender),
-    [columns]
+    [props.tableActions, props.tableActions?.length]
   );
 
   const pageSizeOptions = useRef(
@@ -90,18 +92,14 @@ export function AbleTable<T extends object>({
         .concat(options?.pageSize ? [options.pageSize] : [])
         .sort((a, b) => a - b)
   ).current;
-  const [paging, setPaging] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(options?.pageSize || pageSizeOptions[0]);
+  const paging = useRef(
+    !!options?.paging || !!options?.pageSize || !!options?.pageSizeOptions
+  ).current;
 
   const [sort, setSort] = useState<{ col?: KeyedColumn<T>; desc: boolean }>({ desc: false });
   const [sortedData, setSortedData] = useState<(T & { key: string })[]>(data);
-
-  const columnRef = useRef<Record<string, number>>({});
-  useLayoutEffect(() => {
-    setColumns(mapWidthColumns(columns, columnRef.current));
-    setPaging(!!options?.paging);
-  }, []);
 
   const handleSearch = (filter: string) => {
     const filtered = filterData(data, columns, filter);
@@ -137,7 +135,6 @@ export function AbleTable<T extends object>({
       <table className={`AbleTable-Table ${classes?.table}`} style={styles?.table}>
         {!!props.caption && <caption>{props.caption}</caption>}
         <AbleTableHead
-          ref={(r) => (columnRef.current[r?.id ?? "null"] = r?.clientWidth ?? 0)}
           columns={columns}
           sort={sort}
           options={options}
@@ -152,14 +149,7 @@ export function AbleTable<T extends object>({
           classes={classes}
           onRowClick={onRowClick}
         />
-        {displayFooter && (
-          <AbleTableFoot
-            data={sortedData}
-            columns={columns}
-            styles={styles}
-            classes={classes}
-          />
-        )}
+        <AbleTableFoot data={sortedData} columns={columns} styles={styles} classes={classes} />
       </table>
       {paging && (
         <AbleTablePagination
@@ -252,24 +242,4 @@ function mapKeyedColumns<T extends object>(
         }
       : { ...c, key: `${i}` }
   );
-}
-
-function mapWidthColumns<T extends object>(
-  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
-  widths: Record<string, number>
-): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
-  const totalWidth = Object.values(widths).reduce((a, b) => a + b);
-  return columns.map((c) => {
-    if (isColumnGroup(c)) {
-      const columns = c.columns.map((c2) => {
-        const minWidth = widths[c2.key];
-        const width = `${Math.round((minWidth / totalWidth) * 100)}%`;
-        return { ...c2, width, minWidth };
-      });
-      return { ...c, columns };
-    }
-    const minWidth = widths[c.key];
-    const width = `${Math.round((minWidth / totalWidth) * 100)}%`;
-    return { ...c, width, minWidth };
-  });
 }

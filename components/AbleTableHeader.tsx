@@ -43,13 +43,13 @@ export function AbleTableHeaderComponent<T extends object>({
           : column.headerStyle),
       }}
     >
-      {isFunction(column.render)
+      {!column.render
+        ? "field" in column
+          ? getField(data, column.field)?.toString()
+          : ""
+        : isFunction(column.render)
         ? column.render(data)
-        : !!column.render
-        ? column.render
-        : "field" in column
-        ? getField(data, column.field)?.toString()
-        : ""}
+        : column.render}
     </th>
   );
 }
