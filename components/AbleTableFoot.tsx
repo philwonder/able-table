@@ -24,6 +24,7 @@ export function AbleTableFoot<T extends object>({
       <tr key="FooterRow">
         {flatColumns.map((c, i) => (
           <AbleTableFootCell
+            key={`Footer${c.key}`}
             data={data}
             column={c}
             index={i}
