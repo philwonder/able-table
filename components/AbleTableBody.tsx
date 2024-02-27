@@ -2,7 +2,7 @@ import React from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
 import { AbleStyles } from "../types/AbleStyles";
 import { AbleTableCell } from "./AbleTableCell";
-import { flattenColumns } from "../utilities/flattenColumns";
+import { flattenVisibleColumns } from "../utilities/flattenColumns";
 import { AbleClasses } from "../types/AbleClasses";
 import { isFunction } from "../utilities/isType";
 import { AbleTableHeader } from "./AbleTableHeader";
@@ -22,7 +22,7 @@ export function AbleTableBody<T extends object>({
   styles,
   classes,
 }: AbleTableBodyProps<T>) {
-  const flatColumns = flattenColumns(columns);
+  const flatColumns = flattenVisibleColumns(columns);
   return (
     <tbody style={styles?.tableBody} className={`AbleTable-Body ${classes?.tableBody}`}>
       {!!data.length ? (
