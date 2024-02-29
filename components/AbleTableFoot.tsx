@@ -1,6 +1,6 @@
 import React from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
-import { flattenColumns } from "../utilities/flattenColumns";
+import { flattenVisibleColumns } from "../utilities/flattenColumns";
 import { AbleTableFootCell } from "./AbleTableFootCell";
 import { AbleClasses } from "../types/AbleClasses";
 import { AbleStyles } from "../types/AbleStyles";
@@ -18,7 +18,7 @@ export function AbleTableFoot<T extends object>({
   styles,
   classes,
 }: AbleTableFootProps<T>) {
-  const flatColumns = flattenColumns(columns);
+  const flatColumns = flattenVisibleColumns(columns);
   return (
     <tfoot style={styles?.tableFoot} className={`AbleTable-Foot ${classes?.tableFoot}`}>
       <tr key="FooterRow">
