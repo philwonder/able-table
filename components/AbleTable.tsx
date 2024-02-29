@@ -252,12 +252,14 @@ function mapGroupeddData<T extends object>(
 ): AbleRowGroup<T>[] | (T & { key: string })[] {
   const keyedData = data.map((d, i) => ({ ...d, key: `${i}` }));
   if (!rowGroupDefs.length) return keyedData;
-  return mapSubGroups(keyedData, rowGroupDefs);
+  const groups = mapSubGroups(keyedData, rowGroupDefs);
+  return groups;
 }
 
 function mapSubGroups<T extends object>(
   data: (T & { key: string })[],
-  rowGroupDefs: AbleRowGroupDef<T>[]
+  rowGroupDefs: AbleRowGroupDef<T>[],
+  colspan: number = 1
 ): AbleRowGroup<T>[] {
   const groups: AbleRowGroup<T>[] = [];
   const currentDef = rowGroupDefs[0];
@@ -265,16 +267,20 @@ function mapSubGroups<T extends object>(
     if (!!currentDef.group) {
       const header = currentDef.group(d);
       const group = groups.find((g) => g.header == header);
-      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d] });
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan });
     } else if ("field" in currentDef) {
       const header = getField(d, currentDef.field);
       const group = groups.find((g) => g.header == header);
-      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d] });
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan });
     }
   });
+
   if (rowGroupDefs.length == 1) return groups;
-  return groups.map((g) => ({
-    header: g.header,
-    subGroups: mapSubGroups(g.rows ?? [], rowGroupDefs.slice(1)),
-  }));
+  if (groups.length == 1) return mapSubGroups(data, rowGroupDefs.slice(1), ++colspan);
+
+  return groups.map((g) => {
+    const subGroups = mapSubGroups(g.rows ?? [], rowGroupDefs.slice(1), colspan);
+    if (subGroups.length == 1) return { header: g.header, colspan, rows: subGroups[0].rows };
+    return { header: g.header, colspan: 1, subGroups };
+  });
 }
