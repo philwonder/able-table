@@ -17,10 +17,12 @@ import { SearchBox } from "./SearchBox";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
 import { AbleTableFoot } from "./AbleTableFoot";
+import { AbleRowGroupDef, AbleRowGroup } from "../types/AbleRowGroup";
 
 type AbleTableProps<T extends object> = {
   data: T[];
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
+  rowGroupDefs?: AbleRowGroupDef<T>[];
   title?: ReactNode;
   caption?: string;
   onRowClick?: (d: T) => void;
@@ -242,4 +244,37 @@ function mapKeyedColumns<T extends object>(
         }
       : { ...c, key: `${i}` }
   );
+}
+
+function mapGroupeddData<T extends object>(
+  data: T[],
+  rowGroupDefs: AbleRowGroupDef<T>[]
+): AbleRowGroup<T>[] | (T & { key: string })[] {
+  const keyedData = data.map((d, i) => ({ ...d, key: `${i}` }));
+  if (!rowGroupDefs.length) return keyedData;
+  return mapSubGroups(keyedData, rowGroupDefs);
+}
+
+function mapSubGroups<T extends object>(
+  data: (T & { key: string })[],
+  rowGroupDefs: AbleRowGroupDef<T>[]
+): AbleRowGroup<T>[] {
+  const groups: AbleRowGroup<T>[] = [];
+  const currentDef = rowGroupDefs[0];
+  data.forEach((d) => {
+    if (!!currentDef.group) {
+      const header = currentDef.group(d);
+      const group = groups.find((g) => g.header == header);
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d] });
+    } else if ("field" in currentDef) {
+      const header = getField(d, currentDef.field);
+      const group = groups.find((g) => g.header == header);
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d] });
+    }
+  });
+  if (rowGroupDefs.length == 1) return groups;
+  return groups.map((g) => ({
+    header: g.header,
+    subGroups: mapSubGroups(g.rows ?? [], rowGroupDefs.slice(1)),
+  }));
 }
