@@ -42,4 +42,5 @@ export type AbleRowGroup<T extends object> = {
   rows?: (T & { key: string })[];
   subGroups?: AbleRowGroup<T>[];
   colspan: number;
+  rowspan: number;
 };
