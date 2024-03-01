@@ -41,5 +41,6 @@ export type AbleRowGroup<T extends object> = {
   header: ReactNode;
   rows?: (T & { key: string })[];
   subGroups?: AbleRowGroup<T>[];
-  // colspan: number;
+  colspan: number;
+  rowspan: number;
 };

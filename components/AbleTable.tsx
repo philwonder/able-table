@@ -117,6 +117,7 @@ export function AbleTable<T extends object>({
   };
 
   const visibleData = paging ? getPage(sortedData, currentPage, rowsPerPage) : sortedData;
+  const rowGroups = mapRowGroups(visibleData, props.rowGroupDefs ?? []);
 
   return (
     <div className={`AbleTable-Container ${classes?.container}`} style={styles?.container}>
@@ -138,6 +139,7 @@ export function AbleTable<T extends object>({
         {!!props.caption && <caption>{props.caption}</caption>}
         <AbleTableHead
           columns={columns}
+          rowGroups={rowGroups}
           sort={sort}
           options={options}
           styles={styles}
@@ -145,13 +147,19 @@ export function AbleTable<T extends object>({
           onUpdateSort={handleSort}
         />
         <AbleTableBody
-          data={visibleData}
+          groups={rowGroups}
           columns={columns}
           styles={styles}
           classes={classes}
           onRowClick={onRowClick}
         />
-        <AbleTableFoot data={sortedData} columns={columns} styles={styles} classes={classes} />
+        <AbleTableFoot
+          data={sortedData}
+          columns={columns}
+          rowGroups={rowGroups}
+          styles={styles}
+          classes={classes}
+        />
       </table>
       {paging && (
         <AbleTablePagination
@@ -246,35 +254,47 @@ function mapKeyedColumns<T extends object>(
   );
 }
 
-function mapGroupeddData<T extends object>(
-  data: T[],
-  rowGroupDefs: AbleRowGroupDef<T>[]
-): AbleRowGroup<T>[] | (T & { key: string })[] {
-  const keyedData = data.map((d, i) => ({ ...d, key: `${i}` }));
-  if (!rowGroupDefs.length) return keyedData;
-  return mapSubGroups(keyedData, rowGroupDefs);
-}
+//todo handle rowspan when rowspan of data != 1
 
-function mapSubGroups<T extends object>(
+function mapRowGroups<T extends object>(
   data: (T & { key: string })[],
-  rowGroupDefs: AbleRowGroupDef<T>[]
+  rowGroupDefs: AbleRowGroupDef<T>[],
+  colspan: number = 1
 ): AbleRowGroup<T>[] {
+  if (!rowGroupDefs.length || !data.length)
+    return [{ header: undefined, rows: data, colspan: 0, rowspan: -1 }];
   const groups: AbleRowGroup<T>[] = [];
   const currentDef = rowGroupDefs[0];
   data.forEach((d) => {
     if (!!currentDef.group) {
       const header = currentDef.group(d);
       const group = groups.find((g) => g.header == header);
-      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d] });
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan, rowspan: -1 });
     } else if ("field" in currentDef) {
       const header = getField(d, currentDef.field);
       const group = groups.find((g) => g.header == header);
-      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d] });
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan, rowspan: -1 });
     }
   });
-  if (rowGroupDefs.length == 1) return groups;
-  return groups.map((g) => ({
-    header: g.header,
-    subGroups: mapSubGroups(g.rows ?? [], rowGroupDefs.slice(1)),
-  }));
+
+  if (rowGroupDefs.length == 1)
+    return groups.map((g) => ({ ...g, rowspan: (g.rows?.length ?? 0) + 1 })).sort();
+
+  // if there's only one group, don't display it and increase the colspan of the subsequent group instead
+  if (groups.length == 1) return mapRowGroups(data, rowGroupDefs.slice(1), colspan + 1);
+
+  return groups.sort().map((g) => {
+    const subGroups = mapRowGroups(g.rows ?? [], rowGroupDefs.slice(1), colspan);
+    if (subGroups.length == 1) {
+      // if there's only one subgroup, it must have returned from the last rowGroupDef
+      return {
+        header: g.header,
+        colspan: colspan + 1,
+        rowspan: subGroups[0].rowspan,
+        rows: subGroups[0].rows,
+      };
+    }
+    const rowspan = subGroups.map((g) => g.rowspan).reduce((a, b) => a + b) + 1;
+    return { header: g.header, colspan: 1, rowspan, subGroups };
+  });
 }
