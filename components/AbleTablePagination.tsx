@@ -1,6 +1,6 @@
 import React, { CSSProperties } from "react";
 
-type AbleTablePaginationProps = {
+export type AbleTablePaginationProps = {
   pageSize: number;
   pageSizeOptions: number[];
   currentPage: number;
@@ -20,8 +20,9 @@ export function AbleTablePagination({
   updatePageSize,
   styles,
   classes,
-}: AbleTablePaginationProps) {
-  return (
+  override: Override,
+}: AbleTablePaginationProps & { override: React.FC<AbleTablePaginationProps> | undefined }) {
+  return !Override ? (
     <div style={styles} className={`AbleTable-Pagination ${classes}`}>
       <label htmlFor="page-size">Page size:</label>
       <select
@@ -64,5 +65,16 @@ export function AbleTablePagination({
         </svg>
       </button>
     </div>
+  ) : (
+    <Override
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      currentPage={currentPage}
+      lastPage={lastPage}
+      updateCurrentPage={updateCurrentPage}
+      updatePageSize={updatePageSize}
+      styles={styles}
+      classes={classes}
+    />
   );
 }

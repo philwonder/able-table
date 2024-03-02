@@ -18,6 +18,7 @@ import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
 import { AbleTableFoot } from "./AbleTableFoot";
 import { AbleRowGroupDef, AbleRowGroup } from "../types/AbleRowGroup";
+import { AbleOverrides } from "../types/AbleOverrides";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -41,6 +42,7 @@ type AbleTableProps<T extends object> = {
    * - sortable?: boolean;
    */
   options?: AbleOptions;
+  componentOverrides?: AbleOverrides;
   /**
    * Styles applied to the individual elements of the table.
    * - container?: CSSProperties;
@@ -70,6 +72,7 @@ type AbleTableProps<T extends object> = {
 export function AbleTable<T extends object>({
   onRowClick,
   options,
+  componentOverrides,
   styles,
   classes,
   ...props
@@ -127,6 +130,7 @@ export function AbleTable<T extends object>({
           onChange={handleSearch}
           styles={styles?.searchBox}
           classes={classes?.searchBox}
+          override={componentOverrides?.search}
         />
       )}
       {!!tableActions?.length &&
@@ -174,6 +178,7 @@ export function AbleTable<T extends object>({
           }}
           styles={styles?.pagination}
           classes={classes?.pagination}
+          override={componentOverrides?.pagination}
         />
       )}
     </div>
