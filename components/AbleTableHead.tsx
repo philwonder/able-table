@@ -5,9 +5,12 @@ import { AbleStyles } from "../types/AbleStyles";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
 import { SortableTableHeader } from "./SortableTableHeader";
+import { AbleRowGroup } from "../types/AbleRowGroup";
+import { getRowGroupDepth } from "../utilities/getRowGroupDepth";
 
 type AbleTableHeadProps<T extends object> = {
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
+  rowGroups: AbleRowGroup<T>[];
   sort: { col?: KeyedColumn<T>; desc: boolean };
   onUpdateSort: (sortBy: KeyedColumn<T> | undefined) => void;
   options: AbleOptions | undefined;
@@ -17,6 +20,7 @@ type AbleTableHeadProps<T extends object> = {
 
 export function AbleTableHead<T extends object>({
   columns,
+  rowGroups,
   sort,
   onUpdateSort,
   options,
@@ -64,6 +68,22 @@ export function AbleTableHead<T extends object>({
       {!!visibleColumns.some(isColumnGroup) && (
         // TODO: need to reconsider styling for the groupHeaderRow
         <tr key={"groupHeaderRow"}>
+          {!!(rowGroups.length > 1) && (
+            <th
+              className={`AbleTable-Header ${
+                isFunction(classes?.tableHeader)
+                  ? classes?.tableHeader(undefined)
+                  : classes?.tableHeader
+              }`}
+              style={{
+                textAlign: "center",
+                ...(isFunction(styles?.tableHeader)
+                  ? styles?.tableHeader(undefined)
+                  : styles?.tableHeader),
+              }}
+              colSpan={getRowGroupDepth(rowGroups)}
+            ></th>
+          )}
           {visibleColumns.map((c, i) =>
             isColumnGroup(c) ? (
               <th
@@ -105,6 +125,22 @@ export function AbleTableHead<T extends object>({
         </tr>
       )}
       <tr key={"HeaderRow"}>
+        {!!(rowGroups.length > 1) && (
+          <th
+            className={`AbleTable-Header ${
+              isFunction(classes?.tableHeader)
+                ? classes?.tableHeader(undefined)
+                : classes?.tableHeader
+            }`}
+            style={{
+              textAlign: "center",
+              ...(isFunction(styles?.tableHeader)
+                ? styles?.tableHeader(undefined)
+                : styles?.tableHeader),
+            }}
+            colSpan={getRowGroupDepth(rowGroups)}
+          ></th>
+        )}
         {visibleColumns.map((c, i) =>
           isColumnGroup(c)
             ? c.columns.filter((co) => !co.hidden).map((c) => renderHeaderCell(c, i))

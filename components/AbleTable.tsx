@@ -17,10 +17,13 @@ import { SearchBox } from "./SearchBox";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
 import { AbleTableFoot } from "./AbleTableFoot";
+import { AbleRowGroupDef, AbleRowGroup } from "../types/AbleRowGroup";
+import { AbleOverrides } from "../types/AbleOverrides";
 
 type AbleTableProps<T extends object> = {
   data: T[];
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
+  rowGroupDefs?: AbleRowGroupDef<T>[];
   title?: ReactNode;
   caption?: string;
   onRowClick?: (d: T) => void;
@@ -39,6 +42,7 @@ type AbleTableProps<T extends object> = {
    * - sortable?: boolean;
    */
   options?: AbleOptions;
+  componentOverrides?: AbleOverrides;
   /**
    * Styles applied to the individual elements of the table.
    * - container?: CSSProperties;
@@ -68,6 +72,7 @@ type AbleTableProps<T extends object> = {
 export function AbleTable<T extends object>({
   onRowClick,
   options,
+  componentOverrides,
   styles,
   classes,
   ...props
@@ -115,6 +120,7 @@ export function AbleTable<T extends object>({
   };
 
   const visibleData = paging ? getPage(sortedData, currentPage, rowsPerPage) : sortedData;
+  const rowGroups = mapRowGroups(visibleData, props.rowGroupDefs ?? []);
 
   return (
     <div className={`AbleTable-Container ${classes?.container}`} style={styles?.container}>
@@ -124,6 +130,7 @@ export function AbleTable<T extends object>({
           onChange={handleSearch}
           styles={styles?.searchBox}
           classes={classes?.searchBox}
+          override={componentOverrides?.search}
         />
       )}
       {!!tableActions?.length &&
@@ -136,6 +143,7 @@ export function AbleTable<T extends object>({
         {!!props.caption && <caption>{props.caption}</caption>}
         <AbleTableHead
           columns={columns}
+          rowGroups={rowGroups}
           sort={sort}
           options={options}
           styles={styles}
@@ -143,13 +151,19 @@ export function AbleTable<T extends object>({
           onUpdateSort={handleSort}
         />
         <AbleTableBody
-          data={visibleData}
+          groups={rowGroups}
           columns={columns}
           styles={styles}
           classes={classes}
           onRowClick={onRowClick}
         />
-        <AbleTableFoot data={sortedData} columns={columns} styles={styles} classes={classes} />
+        <AbleTableFoot
+          data={sortedData}
+          columns={columns}
+          rowGroups={rowGroups}
+          styles={styles}
+          classes={classes}
+        />
       </table>
       {paging && (
         <AbleTablePagination
@@ -164,6 +178,7 @@ export function AbleTable<T extends object>({
           }}
           styles={styles?.pagination}
           classes={classes?.pagination}
+          override={componentOverrides?.pagination}
         />
       )}
     </div>
@@ -242,4 +257,49 @@ function mapKeyedColumns<T extends object>(
         }
       : { ...c, key: `${i}` }
   );
+}
+
+//todo handle rowspan when rowspan of data != 1
+
+function mapRowGroups<T extends object>(
+  data: (T & { key: string })[],
+  rowGroupDefs: AbleRowGroupDef<T>[],
+  colspan: number = 1
+): AbleRowGroup<T>[] {
+  if (!rowGroupDefs.length || !data.length)
+    return [{ header: undefined, rows: data, colspan: 0, rowspan: -1 }];
+  const groups: AbleRowGroup<T>[] = [];
+  const currentDef = rowGroupDefs[0];
+  data.forEach((d) => {
+    if (!!currentDef.group) {
+      const header = currentDef.group(d);
+      const group = groups.find((g) => g.header == header);
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan, rowspan: -1 });
+    } else if ("field" in currentDef) {
+      const header = getField(d, currentDef.field);
+      const group = groups.find((g) => g.header == header);
+      !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan, rowspan: -1 });
+    }
+  });
+
+  if (rowGroupDefs.length == 1)
+    return groups.map((g) => ({ ...g, rowspan: (g.rows?.length ?? 0) + 1 })).sort();
+
+  // if there's only one group, don't display it and increase the colspan of the subsequent group instead
+  if (groups.length == 1) return mapRowGroups(data, rowGroupDefs.slice(1), colspan + 1);
+
+  return groups.sort().map((g) => {
+    const subGroups = mapRowGroups(g.rows ?? [], rowGroupDefs.slice(1), colspan);
+    if (subGroups.length == 1) {
+      // if there's only one subgroup, it must have returned from the last rowGroupDef
+      return {
+        header: g.header,
+        colspan: colspan + 1,
+        rowspan: subGroups[0].rowspan,
+        rows: subGroups[0].rows,
+      };
+    }
+    const rowspan = subGroups.map((g) => g.rowspan).reduce((a, b) => a + b) + 1;
+    return { header: g.header, colspan: 1, rowspan, subGroups };
+  });
 }
