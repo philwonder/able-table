@@ -10,7 +10,7 @@ export type AbleRowGroupDef<T extends object> = {
   headerStyle?: CSSProperties | ((c?: AbleRowGroup<T>, i?: number) => CSSProperties);
   /**
    * Styles applied to the row group's \<tr> elements.
-   * - Overridden by the styles.tableRow prop.
+   * - Overridden by the styles.tableRow prop. //This should override the styles not be overridden
    */
   rowStyle?: CSSProperties | ((c?: AbleRowGroup<T>, i?: number) => CSSProperties);
 } & (
