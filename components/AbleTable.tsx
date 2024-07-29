@@ -19,6 +19,7 @@ import { AbleTableFoot } from "./AbleTableFoot";
 import { AbleRowGroupDef, AbleRowGroup } from "../types/AbleRowGroup";
 import { AbleOverrides } from "../types/AbleOverrides";
 import { sum } from "../utilities/sum";
+import { mapKeyedColumns } from "../utilities/mapKeyedColumns";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -243,27 +244,6 @@ function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
 
 function getPage<T extends object>(data: T[], page: number, rowsPerPage: number) {
   return data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-}
-
-function mapKeyedColumns<T extends object>(
-  columns: (AbleColumn<T> | AbleColumnGroup<T>)[],
-  isTableSortable: boolean,
-  parentKey?: string,
-  parentHidden?: boolean
-): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
-  return columns.map((c, i) => {
-    const key = !!parentKey ? `${parentKey}${i}` : `${i}`;
-    const hidden = parentHidden || c.hidden;
-    if (!isColumnGroup(c)) {
-      const sortable =
-        isTableSortable && !(c.sortable === false) && !!c.header && ("field" in c || !!c.sort);
-      return { ...c, sortable, hidden, key, level: 0, span: hidden ? 0 : 1 };
-    }
-    const mappedColumns = mapKeyedColumns(c.columns, isTableSortable, key, hidden);
-    const level = Math.max(...mappedColumns.map((c) => c.level)) + 1;
-    const span = hidden ? 0 : sum(mappedColumns.map((c) => c.span));
-    return { ...c, key, level, span, columns: mappedColumns };
-  });
 }
 
 function mapHeaderRows<T extends object>(columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[]) {
