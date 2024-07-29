@@ -12,7 +12,6 @@ import { AbleTableBody } from "./AbleTableBody";
 import { AbleTableHead } from "./AbleTableHead";
 import { AbleTablePagination } from "./AbleTablePagination";
 import { AbleStyles } from "../types/AbleStyles";
-import { flattenColumns } from "../utilities/flattenColumns";
 import { SearchBox } from "./SearchBox";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
@@ -83,6 +82,7 @@ export function AbleTable<T extends object>({
     [props.columns, props.columns.length]
   );
   const headerRows = useMemo(() => mapHeaderRows(columns), [columns]);
+  const baseColumns = headerRows.at(-1) as KeyedColumn<T>[]; //should be correct, but would like type safety and tests
   const data = useMemo(
     () => props.data.map((d, i) => ({ ...d, key: `${i}` })),
     [props.data, props.data.length]
@@ -109,7 +109,7 @@ export function AbleTable<T extends object>({
   const [sortedData, setSortedData] = useState<(T & { key: string })[]>(data);
 
   const handleSearch = (filter: string) => {
-    const filtered = filterData(data, columns, filter);
+    const filtered = filterData(data, baseColumns, filter);
     const sorted = sort.col ? sortData(filtered, sort) : filtered;
     setSortedData(sorted);
   };
@@ -153,14 +153,14 @@ export function AbleTable<T extends object>({
         />
         <AbleTableBody
           groups={rowGroups}
-          columns={columns}
+          columns={baseColumns.filter((c) => !c.hidden)}
           styles={styles}
           classes={classes}
           onRowClick={onRowClick}
         />
         <AbleTableFoot
           data={sortedData}
-          columns={columns}
+          columns={baseColumns.filter((c) => !c.hidden)}
           rowGroups={rowGroups}
           styles={styles}
           classes={classes}
@@ -188,12 +188,11 @@ export function AbleTable<T extends object>({
 
 function filterData<T extends object>(
   data: (T & { key: string })[],
-  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
+  baseColumns: KeyedColumn<T>[],
   filter: string
 ) {
-  const flatColumns = flattenColumns(columns);
   return data.filter((d) =>
-    flatColumns.some(
+    baseColumns.some(
       (c) => c.searchable !== false && (c.search?.(d, filter) || standardSearch(d, c, filter))
     )
   );

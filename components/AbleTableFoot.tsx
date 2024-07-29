@@ -1,6 +1,5 @@
 import React from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
-import { flattenVisibleColumns } from "../utilities/flattenColumns";
 import { AbleTableFootCell } from "./AbleTableFootCell";
 import { AbleClasses } from "../types/AbleClasses";
 import { AbleStyles } from "../types/AbleStyles";
@@ -10,7 +9,7 @@ import { getRowHeaderColSpan } from "../utilities/getRowHeaderColSpan";
 
 type AbleTableFootProps<T extends object> = {
   data: (T & { key: string })[];
-  columns: (KeyedColumnGroup<T> | KeyedColumn<T>)[];
+  columns: KeyedColumn<T>[];
   rowGroups: AbleRowGroup<T>[];
   styles: AbleStyles<T> | undefined;
   classes: AbleClasses<T> | undefined;
@@ -23,7 +22,6 @@ export function AbleTableFoot<T extends object>({
   styles,
   classes,
 }: AbleTableFootProps<T>) {
-  const flatColumns = flattenVisibleColumns(columns);
   return (
     <tfoot style={styles?.tableFoot} className={`AbleTable-Foot ${classes?.tableFoot}`}>
       <tr key="FooterRow">
@@ -43,7 +41,7 @@ export function AbleTableFoot<T extends object>({
             colSpan={getRowHeaderColSpan(rowGroups)}
           ></th>
         )}
-        {flatColumns.map((c, i) => (
+        {columns.map((c, i) => (
           <AbleTableFootCell
             key={`Footer${c.key}`}
             data={data}

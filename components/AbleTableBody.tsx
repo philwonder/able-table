@@ -2,7 +2,6 @@ import React, { ReactNode } from "react";
 import { KeyedColumn, KeyedColumnGroup } from "../types/AbleColumn";
 import { AbleStyles } from "../types/AbleStyles";
 import { AbleTableCell } from "./AbleTableCell";
-import { flattenVisibleColumns } from "../utilities/flattenColumns";
 import { AbleClasses } from "../types/AbleClasses";
 import { isFunction } from "../utilities/isType";
 import { AbleTableHeader } from "./AbleTableHeader";
@@ -10,7 +9,7 @@ import { AbleRowGroup } from "../types/AbleRowGroup";
 
 type AbleTableBodyProps<T extends object> = {
   groups: AbleRowGroup<T>[];
-  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
+  columns: KeyedColumn<T>[];
   onRowClick: ((d: T) => void) | undefined;
   styles: AbleStyles<T> | undefined;
   classes: AbleClasses<T> | undefined;
@@ -23,14 +22,12 @@ export function AbleTableBody<T extends object>({
   styles,
   classes,
 }: AbleTableBodyProps<T>) {
-  const flatColumns = flattenVisibleColumns(columns);
-
   function mapToTable(groups: AbleRowGroup<T>[]): ReactNode[] {
     if (!groups.length || (!groups[0].colspan && !groups[0].rows?.length)) {
       return [
         <>
           <tr>
-            {flatColumns.map((c) => (
+            {columns.map((c) => (
               <td key={`empty${c.key}`} style={{ ...c.cellStyle, opacity: 0 }}></td>
             ))}
           </tr>
@@ -71,7 +68,7 @@ export function AbleTableBody<T extends object>({
                 ...(isFunction(styles?.tableRow) ? styles?.tableRow(d, i) : styles?.tableRow),
               }}
             >
-              {flatColumns.map((c, j) =>
+              {columns.map((c, j) =>
                 c.isHeader ? (
                   <AbleTableHeader
                     key={`${d.key}${c.key}`}
