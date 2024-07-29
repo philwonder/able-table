@@ -103,16 +103,20 @@ export type AbleColumnGroup<T extends object> = {
    */
   hidden?: boolean;
   /** The columns in this group */
-  columns: AbleColumn<T>[];
+  columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
 };
 
 export type KeyedColumn<T extends object> = AbleColumn<T> & {
   key: string;
+  level: number;
+  span: number;
   groupHeaderStyle?: CSSProperties;
   groupCellStyle?: CSSProperties;
 };
 
 export type KeyedColumnGroup<T extends object> = Omit<AbleColumnGroup<T>, "columns"> & {
   key: string;
-  columns: KeyedColumn<T>[];
+  level: number;
+  span: number;
+  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
 };
