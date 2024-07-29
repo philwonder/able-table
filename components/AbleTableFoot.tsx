@@ -6,7 +6,7 @@ import { AbleClasses } from "../types/AbleClasses";
 import { AbleStyles } from "../types/AbleStyles";
 import { AbleRowGroup } from "../types/AbleRowGroup";
 import { isFunction } from "../utilities/isType";
-import { getRowGroupDepth } from "../utilities/getRowGroupDepth";
+import { getRowHeaderColSpan } from "../utilities/getRowHeaderColSpan";
 
 type AbleTableFootProps<T extends object> = {
   data: (T & { key: string })[];
@@ -40,7 +40,7 @@ export function AbleTableFoot<T extends object>({
                 ? styles?.tableCell(undefined)
                 : styles?.tableCell),
             }}
-            colSpan={getRowGroupDepth(rowGroups)}
+            colSpan={getRowHeaderColSpan(rowGroups)}
           ></th>
         )}
         {flatColumns.map((c, i) => (

@@ -6,7 +6,7 @@ import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
 import { SortableTableHeader } from "./SortableTableHeader";
 import { AbleRowGroup } from "../types/AbleRowGroup";
-import { getRowGroupDepth } from "../utilities/getRowGroupDepth";
+import { getRowHeaderColSpan } from "../utilities/getRowHeaderColSpan";
 
 type AbleTableHeadProps<T extends object> = {
   columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[];
@@ -81,7 +81,7 @@ export function AbleTableHead<T extends object>({
                   ? styles?.tableHeader(undefined)
                   : styles?.tableHeader),
               }}
-              colSpan={getRowGroupDepth(rowGroups)}
+              colSpan={getRowHeaderColSpan(rowGroups)}
             ></th>
           )}
           {visibleColumns.map((c, i) =>
