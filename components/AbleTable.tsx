@@ -19,6 +19,8 @@ import { AbleTableFoot } from "./AbleTableFoot";
 import { AbleRowGroupDef, AbleRowGroup } from "../types/AbleRowGroup";
 import { AbleOverrides } from "../types/AbleOverrides";
 import { sum } from "../utilities/sum";
+import { mapKeyedColumns } from "../utilities/mapKeyedColumns";
+import { mapHeaderRows } from "../utilities/mapHeaderRows";
 
 type AbleTableProps<T extends object> = {
   data: T[];
@@ -82,7 +84,7 @@ export function AbleTable<T extends object>({
     [props.columns, props.columns.length]
   );
   const headerRows = useMemo(() => mapHeaderRows(columns), [columns]);
-  const baseColumns = headerRows.at(-1) as KeyedColumn<T>[]; //should be correct, but would like type safety and tests
+  const baseColumns = headerRows.at(-1) as KeyedColumn<T>[]; //should be correct and is tested, but would like type safety
   const data = useMemo(
     () => props.data.map((d, i) => ({ ...d, key: `${i}` })),
     [props.data, props.data.length]
@@ -243,43 +245,6 @@ function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
 
 function getPage<T extends object>(data: T[], page: number, rowsPerPage: number) {
   return data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-}
-
-function mapKeyedColumns<T extends object>(
-  columns: (AbleColumn<T> | AbleColumnGroup<T>)[],
-  isTableSortable: boolean,
-  parentKey?: string,
-  parentHidden?: boolean
-): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
-  return columns.map((c, i) => {
-    const key = !!parentKey ? `${parentKey}${i}` : `${i}`;
-    const hidden = parentHidden || c.hidden;
-    if (!isColumnGroup(c)) {
-      const sortable =
-        isTableSortable && !(c.sortable === false) && !!c.header && ("field" in c || !!c.sort);
-      return { ...c, sortable, hidden, key, level: 0, span: hidden ? 0 : 1 };
-    }
-    const mappedColumns = mapKeyedColumns(c.columns, isTableSortable, key, hidden);
-    const level = Math.max(...mappedColumns.map((c) => c.level)) + 1;
-    const span = hidden ? 0 : sum(mappedColumns.map((c) => c.span));
-    return { ...c, key, level, span, columns: mappedColumns };
-  });
-}
-
-function mapHeaderRows<T extends object>(columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[]) {
-  const maxLevel = Math.max(...columns.map((c) => c.level));
-  const rows: (KeyedColumn<T> | KeyedColumnGroup<T>)[][] = [];
-  let remainingColumns = [...columns];
-  for (let i = maxLevel; i >= 0; i--) {
-    const row: (KeyedColumn<T> | KeyedColumnGroup<T>)[] = remainingColumns.map((c) =>
-      c.level === i ? c : { ...c, header: "", level: i, key: `placeHolder${i}${c.key}` }
-    );
-    rows.push(row);
-    remainingColumns = remainingColumns
-      .map((c) => (c.level === i && isColumnGroup(c) ? c.columns : c))
-      .flat();
-  }
-  return rows;
 }
 
 function mapRowGroups<T extends object>(
