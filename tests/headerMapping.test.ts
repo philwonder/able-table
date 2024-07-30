@@ -1,55 +1,57 @@
-import { AbleColumn, AbleColumnGroup } from "../types/AbleColumn";
+import { AbleColumn, AbleColumnGroup, KeyedColumn } from "../types/AbleColumn";
+import { mapHeaderRows } from "../utilities/mapHeaderRows";
 import { mapKeyedColumns } from "../utilities/mapKeyedColumns";
+import { sum } from "../utilities/sum";
 
 const testColumns: (AbleColumn<{}> | AbleColumnGroup<{}>)[] = [
   {
-    header: "1",
+    header: "3",
     columns: [
       {
-        header: "1A",
+        header: "2",
         columns: [
           {
-            header: "1Aa",
+            header: "1",
             columns: [
-              { header: "1Aa1", render: "" },
-              { header: "1Aa2", render: "" },
-              { header: "1Aa3", render: "" },
+              { header: "0", render: "base" },
+              { header: "0", render: "base" },
+              { header: "0", render: "base" },
             ],
           },
-          { header: "1Ab", render: "" },
-          { header: "1Ac", render: "" },
+          { header: "0", render: "base" },
+          { header: "0", render: "base" },
         ],
       },
-      { header: "1B", render: "" },
+      { header: "0", render: "base" },
     ],
   },
   {
     header: "2",
     columns: [
       {
-        header: "2A",
+        header: "1",
         columns: [
-          { header: "2Aa", render: "" },
-          { header: "2Ab", render: "" },
-          { header: "2Ac", render: "" },
+          { header: "0", render: "base" },
+          { header: "0", render: "base" },
+          { header: "0", render: "base" },
         ],
       },
-      { header: "2B", render: "" },
+      { header: "0", render: "base" },
     ],
   },
-  { header: "3", render: "" },
-  { header: "4", render: "" },
+  { header: "0", render: "base" },
+  { header: "0", render: "base" },
   {
-    header: "5",
+    header: "2",
     columns: [
       {
-        header: "5A",
+        header: "1",
         columns: [
-          { header: "5Aa", render: "" },
-          { header: "5Ab", render: "" },
+          { header: "0", render: "base" },
+          { header: "0", render: "base" },
         ],
       },
-      { header: "5B", render: "" },
+      { header: "0", render: "base" },
     ],
   },
 ];
@@ -136,6 +138,36 @@ describe("mapKeyedColumns", () => {
 
     colspans.forEach((span, i) => {
       expect(span).toEqual(expectedColspans[i]);
+    });
+  });
+});
+
+describe("mapHeaderRows", () => {
+  it("maps the correct total colspan for each row", () => {
+    const keyedColumns = mapKeyedColumns(testColumns, true);
+    const headerRows = mapHeaderRows(keyedColumns);
+
+    headerRows.forEach((r) => {
+      const colspan = sum(r.map((c) => c.span));
+      expect(colspan).toBe(15);
+    });
+  });
+
+  it("maps the correct total columns for each row", () => {
+    const keyedColumns = mapKeyedColumns(testColumns, true);
+    const headerRows = mapHeaderRows(keyedColumns);
+    expect(headerRows.at(0)?.length).toBe(5);
+    expect(headerRows.at(1)?.length).toBe(6);
+    expect(headerRows.at(2)?.length).toBe(10);
+    expect(headerRows.at(3)?.length).toBe(15);
+    expect(headerRows.at(4)?.length).toBe(undefined);
+  });
+
+  it("maps only the base columns to the final row", () => {
+    const keyedColumns = mapKeyedColumns(testColumns, true);
+    const headerRows = mapHeaderRows(keyedColumns);
+    headerRows.at(-1)?.forEach((c) => {
+      expect((c as KeyedColumn<{}>).render).toBe("base");
     });
   });
 });
