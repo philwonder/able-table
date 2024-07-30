@@ -12,18 +12,18 @@ import { AbleTableBody } from "./AbleTableBody";
 import { AbleTableHead } from "./AbleTableHead";
 import { AbleTablePagination } from "./AbleTablePagination";
 import { AbleStyles } from "../types/AbleStyles";
-import { flattenColumns } from "../utilities/flattenColumns";
 import { SearchBox } from "./SearchBox";
 import { isColumnGroup, isFunction } from "../utilities/isType";
 import { AbleClasses } from "../types/AbleClasses";
 import { AbleTableFoot } from "./AbleTableFoot";
 import { AbleRowGroupDef, AbleRowGroup } from "../types/AbleRowGroup";
 import { AbleOverrides } from "../types/AbleOverrides";
+import { sum } from "../utilities/sum";
 
 type AbleTableProps<T extends object> = {
   data: T[];
   columns: (AbleColumn<T> | AbleColumnGroup<T>)[];
-  rowGroupDefs?: AbleRowGroupDef<T>[];
+  rowGroups?: AbleRowGroupDef<T>[];
   title?: ReactNode;
   caption?: string;
   onRowClick?: (d: T) => void;
@@ -78,9 +78,11 @@ export function AbleTable<T extends object>({
   ...props
 }: AbleTableProps<T>) {
   const columns = useMemo(
-    () => mapKeyedColumns(props.columns),
+    () => mapKeyedColumns(props.columns, !(options?.sortable === false)),
     [props.columns, props.columns.length]
   );
+  const headerRows = useMemo(() => mapHeaderRows(columns), [columns]);
+  const baseColumns = headerRows.at(-1) as KeyedColumn<T>[]; //should be correct, but would like type safety and tests
   const data = useMemo(
     () => props.data.map((d, i) => ({ ...d, key: `${i}` })),
     [props.data, props.data.length]
@@ -93,7 +95,7 @@ export function AbleTable<T extends object>({
   const pageSizeOptions = useRef(
     options?.pageSizeOptions ??
       [10, 25, 50, 100]
-        .filter((n) => n != options?.pageSize)
+        .filter((n) => n !== options?.pageSize)
         .concat(options?.pageSize ? [options.pageSize] : [])
         .sort((a, b) => a - b)
   ).current;
@@ -107,25 +109,25 @@ export function AbleTable<T extends object>({
   const [sortedData, setSortedData] = useState<(T & { key: string })[]>(data);
 
   const handleSearch = (filter: string) => {
-    const filtered = filterData(data, columns, filter);
+    const filtered = filterData(data, baseColumns, filter);
     const sorted = sort.col ? sortData(filtered, sort) : filtered;
     setSortedData(sorted);
   };
 
   const handleSort = (col?: KeyedColumn<T>) => {
     setCurrentPage(0);
-    const newSort = sort.col != col ? { col, desc: true } : { ...sort, desc: !sort.desc };
+    const newSort = sort.col !== col ? { col, desc: true } : { ...sort, desc: !sort.desc };
     setSortedData([...sortData(sortedData, newSort)]);
     setSort(newSort);
   };
 
   const visibleData = paging ? getPage(sortedData, currentPage, rowsPerPage) : sortedData;
-  const rowGroups = mapRowGroups(visibleData, props.rowGroupDefs ?? []);
+  const rowGroups = mapRowGroups(visibleData, props.rowGroups ?? []);
 
   return (
     <div className={`AbleTable-Container ${classes?.container}`} style={styles?.container}>
       {props.title}
-      {options?.searchable != false && (
+      {options?.searchable !== false && (
         <SearchBox
           onChange={handleSearch}
           styles={styles?.searchBox}
@@ -142,24 +144,23 @@ export function AbleTable<T extends object>({
       <table className={`AbleTable-Table ${classes?.table}`} style={styles?.table}>
         {!!props.caption && <caption>{props.caption}</caption>}
         <AbleTableHead
-          columns={columns}
+          rows={headerRows}
           rowGroups={rowGroups}
           sort={sort}
-          options={options}
           styles={styles}
           classes={classes}
           onUpdateSort={handleSort}
         />
         <AbleTableBody
           groups={rowGroups}
-          columns={columns}
+          columns={baseColumns.filter((c) => !c.hidden)}
           styles={styles}
           classes={classes}
           onRowClick={onRowClick}
         />
         <AbleTableFoot
           data={sortedData}
-          columns={columns}
+          columns={baseColumns.filter((c) => !c.hidden)}
           rowGroups={rowGroups}
           styles={styles}
           classes={classes}
@@ -187,13 +188,12 @@ export function AbleTable<T extends object>({
 
 function filterData<T extends object>(
   data: (T & { key: string })[],
-  columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[],
+  baseColumns: KeyedColumn<T>[],
   filter: string
 ) {
-  const flatColumns = flattenColumns(columns);
   return data.filter((d) =>
-    flatColumns.some(
-      (c) => c.searchable != false && (c.search?.(d, filter) || standardSearch(d, c, filter))
+    baseColumns.some(
+      (c) => c.searchable !== false && (c.search?.(d, filter) || standardSearch(d, c, filter))
     )
   );
 }
@@ -223,7 +223,7 @@ function sortData<T extends object>(
 
 function standardSort<T extends object>(sortBy: KeyedColumn<T> | undefined) {
   return (a: T & { key: string }, b: T & { key: string }) => {
-    if (sortBy == undefined || !("field" in sortBy)) {
+    if (sortBy === undefined || !("field" in sortBy)) {
       return 0;
     }
     const sortByA = getField(a, sortBy.field);
@@ -246,20 +246,41 @@ function getPage<T extends object>(data: T[], page: number, rowsPerPage: number)
 }
 
 function mapKeyedColumns<T extends object>(
-  columns: (AbleColumn<T> | AbleColumnGroup<T>)[]
+  columns: (AbleColumn<T> | AbleColumnGroup<T>)[],
+  isTableSortable: boolean,
+  parentKey?: string,
+  parentHidden?: boolean
 ): (KeyedColumn<T> | KeyedColumnGroup<T>)[] {
-  return columns.map((c, i) =>
-    isColumnGroup(c)
-      ? {
-          ...c,
-          key: `${i}`,
-          columns: c.columns.map((c2, j) => ({ ...c2, key: `${i}${j}` })),
-        }
-      : { ...c, key: `${i}` }
-  );
+  return columns.map((c, i) => {
+    const key = !!parentKey ? `${parentKey}${i}` : `${i}`;
+    const hidden = parentHidden || c.hidden;
+    if (!isColumnGroup(c)) {
+      const sortable =
+        isTableSortable && !(c.sortable === false) && !!c.header && ("field" in c || !!c.sort);
+      return { ...c, sortable, hidden, key, level: 0, span: hidden ? 0 : 1 };
+    }
+    const mappedColumns = mapKeyedColumns(c.columns, isTableSortable, key, hidden);
+    const level = Math.max(...mappedColumns.map((c) => c.level)) + 1;
+    const span = hidden ? 0 : sum(mappedColumns.map((c) => c.span));
+    return { ...c, key, level, span, columns: mappedColumns };
+  });
 }
 
-//todo handle rowspan when rowspan of data != 1
+function mapHeaderRows<T extends object>(columns: (KeyedColumn<T> | KeyedColumnGroup<T>)[]) {
+  const maxLevel = Math.max(...columns.map((c) => c.level));
+  const rows: (KeyedColumn<T> | KeyedColumnGroup<T>)[][] = [];
+  let remainingColumns = [...columns];
+  for (let i = maxLevel; i >= 0; i--) {
+    const row: (KeyedColumn<T> | KeyedColumnGroup<T>)[] = remainingColumns.map((c) =>
+      c.level === i ? c : { ...c, header: "", level: i, key: `placeHolder${i}${c.key}` }
+    );
+    rows.push(row);
+    remainingColumns = remainingColumns
+      .map((c) => (c.level === i && isColumnGroup(c) ? c.columns : c))
+      .flat();
+  }
+  return rows;
+}
 
 function mapRowGroups<T extends object>(
   data: (T & { key: string })[],
@@ -273,24 +294,24 @@ function mapRowGroups<T extends object>(
   data.forEach((d) => {
     if (!!currentDef.group) {
       const header = currentDef.group(d);
-      const group = groups.find((g) => g.header == header);
+      const group = groups.find((g) => g.header === header); //these are react nodes not strings, this will probably break big time
       !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan, rowspan: -1 });
     } else if ("field" in currentDef) {
       const header = getField(d, currentDef.field);
-      const group = groups.find((g) => g.header == header);
+      const group = groups.find((g) => g.header === header);
       !!group ? group.rows?.push(d) : groups.push({ header, rows: [d], colspan, rowspan: -1 });
     }
   });
 
-  if (rowGroupDefs.length == 1)
+  if (rowGroupDefs.length === 1)
     return groups.map((g) => ({ ...g, rowspan: (g.rows?.length ?? 0) + 1 })).sort();
 
   // if there's only one group, don't display it and increase the colspan of the subsequent group instead
-  if (groups.length == 1) return mapRowGroups(data, rowGroupDefs.slice(1), colspan + 1);
+  if (groups.length === 1) return mapRowGroups(data, rowGroupDefs.slice(1), colspan + 1);
 
   return groups.sort().map((g) => {
     const subGroups = mapRowGroups(g.rows ?? [], rowGroupDefs.slice(1), colspan);
-    if (subGroups.length == 1) {
+    if (subGroups.length === 1) {
       // if there's only one subgroup, it must have returned from the last rowGroupDef
       return {
         header: g.header,
