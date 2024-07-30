@@ -4,7 +4,7 @@
   "description": "A fast, flexible, type-safe react table",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -17,10 +17,13 @@
   },
   "homepage": "https://github.com/philwonder/able-table#readme",
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^20.11.15",
     "@types/react": "^18.2.48",
+    "jest": "^29.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "ts-jest": "^29.2.3",
     "typescript": "^5.3.3"
   }
 }
