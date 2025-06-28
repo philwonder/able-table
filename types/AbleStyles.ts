@@ -42,3 +42,45 @@ export type AbleStyles<T extends object> = {
   searchBox?: CSSProperties | ((value: string) => CSSProperties);
   pagination?: CSSProperties;
 };
+
+export type StockStyles = {
+  /**
+   * Styles applied to the root \<div> element.
+   */
+  container: CSSProperties;
+  /**
+   * Styles applied to the \<table> element.
+   */
+  table: CSSProperties;
+  /**
+   * Styles applied to the \<tbody> element.
+   */
+  tableBody: CSSProperties;
+  /**
+   * Styles applied to the \<thead> element.
+   */
+  tableHead: CSSProperties;
+  /**
+   * Styles applied to the \<tfoot> element.
+   */
+  tableFoot: CSSProperties;
+  /**
+   * Styles applied to the \<tr> elements in \<tbody>.
+   */
+  tableRow: CSSProperties;
+  /**
+   * Styles applied to the \<th> elements.
+   * Overridden by column headerStyle prop.
+   */
+  tableHeader: CSSProperties;
+  /**
+   * Styles applied to the \<td> elements.
+   * Overridden by column cellStyle prop.
+   */
+  tableCell: CSSProperties;
+  /**
+   * Styles applied to the search box.
+   */
+  searchBox: CSSProperties | ((value: string) => CSSProperties);
+  pagination: CSSProperties;
+};
